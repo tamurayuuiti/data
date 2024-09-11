@@ -35,92 +35,39 @@
             <td id="userAgent"></td>
         </tr>
         <tr>
-            <td>言語</td>
-            <td id="language"></td>
+            <td>デバイス名</td>
+            <td id="deviceName"></td>
         </tr>
         <tr>
-            <td>プラットフォーム</td>
-            <td id="platform"></td>
+            <td>ブラウザ名</td>
+            <td id="browserName"></td>
         </tr>
         <tr>
-            <td>ビジョン</td>
-            <td id="vendor"></td>
+            <td>ブラウザバージョン</td>
+            <td id="browserVersion"></td>
         </tr>
         <tr>
-            <td>ビジョンのバージョン</td>
-            <td id="vendorSub"></td>
+            <td>OS名</td>
+            <td id="osName"></td>
         </tr>
         <tr>
-            <td>デバイスタイプ</td>
-            <td id="deviceMemory"></td>
-        </tr>
-        <tr>
-            <td>オンライン状態</td>
-            <td id="online"></td>
-        </tr>
-        <tr>
-            <td>画面幅</td>
-            <td id="screenWidth"></td>
-        </tr>
-        <tr>
-            <td>画面高さ</td>
-            <td id="screenHeight"></td>
-        </tr>
-        <tr>
-            <td>スクリーンの色深度</td>
-            <td id="colorDepth"></td>
-        </tr>
-        <tr>
-            <td>画面の解像度</td>
-            <td id="resolution"></td>
-        </tr>
-        <tr>
-            <td>デバイスの向き</td>
-            <td id="orientation"></td>
-        </tr>
-        <tr>
-            <td>ブラウザの幅</td>
-            <td id="innerWidth"></td>
-        </tr>
-        <tr>
-            <td>ブラウザの高さ</td>
-            <td id="innerHeight"></td>
-        </tr>
-        <tr>
-            <td>スクロール幅</td>
-            <td id="scrollWidth"></td>
-        </tr>
-        <tr>
-            <td>スクロール高さ</td>
-            <td id="scrollHeight"></td>
+            <td>OSバージョン</td>
+            <td id="osVersion"></td>
         </tr>
     </table>
 
+    <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.0/dist/ua-parser.min.js"></script>
     <script>
         function updateDeviceInfo() {
+            var parser = new UAParser();
+            var result = parser.getResult();
+
             document.getElementById('userAgent').textContent = navigator.userAgent || '情報なし';
-            document.getElementById('language').textContent = navigator.language || '情報なし';
-            document.getElementById('platform').textContent = navigator.platform || '情報なし';
-            document.getElementById('vendor').textContent = navigator.vendor || '情報なし';
-            document.getElementById('vendorSub').textContent = navigator.vendorSub || '情報なし';
-            document.getElementById('deviceMemory').textContent = navigator.deviceMemory || '情報なし';
-            document.getElementById('online').textContent = navigator.onLine ? 'オンライン' : 'オフライン';
-
-            document.getElementById('screenWidth').textContent = screen.width ? `${screen.width}px` : '情報なし';
-            document.getElementById('screenHeight').textContent = screen.height ? `${screen.height}px` : '情報なし';
-            document.getElementById('colorDepth').textContent = screen.colorDepth ? `${screen.colorDepth}ビット` : '情報なし';
-            document.getElementById('resolution').textContent = (screen.width && screen.height) ? `${screen.width} x ${screen.height} px` : '情報なし';
-            
-            if (window.screen.orientation) {
-                document.getElementById('orientation').textContent = window.screen.orientation.type || '情報なし';
-            } else {
-                document.getElementById('orientation').textContent = '情報なし';
-            }
-
-            document.getElementById('innerWidth').textContent = window.innerWidth ? `${window.innerWidth}px` : '情報なし';
-            document.getElementById('innerHeight').textContent = window.innerHeight ? `${window.innerHeight}px` : '情報なし';
-            document.getElementById('scrollWidth').textContent = document.documentElement.scrollWidth ? `${document.documentElement.scrollWidth}px` : '情報なし';
-            document.getElementById('scrollHeight').textContent = document.documentElement.scrollHeight ? `${document.documentElement.scrollHeight}px` : '情報なし';
+            document.getElementById('deviceName').textContent = result.device.model || '情報なし';
+            document.getElementById('browserName').textContent = result.browser.name || '情報なし';
+            document.getElementById('browserVersion').textContent = result.browser.version || '情報なし';
+            document.getElementById('osName').textContent = result.os.name || '情報なし';
+            document.getElementById('osVersion').textContent = result.os.version || '情報なし';
         }
 
         // 初期表示
@@ -131,3 +78,4 @@
     </script>
 </body>
 </html>
+
