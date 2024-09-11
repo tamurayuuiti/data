@@ -3,83 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>クリックゲーム</title>
+    <title>デバイス情報表示</title>
     <style>
         body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
             font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 20px;
         }
-        .container {
-            max-width: 600px;
+        table {
+            border-collapse: collapse;
             width: 100%;
         }
-        .button {
-            display: inline-block;
-            padding: 15px 30px;
-            font-size: 24px;
-            color: #fff;
-            background-color: #007bff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
         }
-        .button:hover {
-            background-color: #0056b3;
-        }
-        .status {
-            margin-bottom: 20px;
-            font-size: 20px;
+        th {
+            background-color: #f4f4f4;
+            text-align: left;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="status">
-            <div>スコア: <span id="score">0</span></div>
-            <div>残り時間: <span id="timer">30</span> 秒</div>
-        </div>
-        <button class="button" onclick="incrementScore()">クリックしてスコアを増やす</button>
-    </div>
+    <h1>デバイス情報</h1>
+    <table>
+        <tr>
+            <th>プロパティ</th>
+            <th>値</th>
+        </tr>
+        <tr>
+            <td>ユーザーエージェント</td>
+            <td id="userAgent"></td>
+        </tr>
+        <tr>
+            <td>言語</td>
+            <td id="language"></td>
+        </tr>
+        <tr>
+            <td>プラットフォーム</td>
+            <td id="platform"></td>
+        </tr>
+        <tr>
+            <td>ビジョン</td>
+            <td id="vendor"></td>
+        </tr>
+        <tr>
+            <td>ビジョンのバージョン</td>
+            <td id="vendorSub"></td>
+        </tr>
+        <tr>
+            <td>デバイスタイプ</td>
+            <td id="deviceMemory"></td>
+        </tr>
+        <tr>
+            <td>オンライン状態</td>
+            <td id="online"></td>
+        </tr>
+        <tr>
+            <td>画面幅</td>
+            <td id="screenWidth"></td>
+        </tr>
+        <tr>
+            <td>画面高さ</td>
+            <td id="screenHeight"></td>
+        </tr>
+        <tr>
+            <td>スクリーンの色深度</td>
+            <td id="colorDepth"></td>
+        </tr>
+        <tr>
+            <td>画面の解像度</td>
+            <td id="resolution"></td>
+        </tr>
+        <tr>
+            <td>デバイスの向き</td>
+            <td id="orientation"></td>
+        </tr>
+        <tr>
+            <td>ブラウザの幅</td>
+            <td id="innerWidth"></td>
+        </tr>
+        <tr>
+            <td>ブラウザの高さ</td>
+            <td id="innerHeight"></td>
+        </tr>
+        <tr>
+            <td>スクロール幅</td>
+            <td id="scrollWidth"></td>
+        </tr>
+        <tr>
+            <td>スクロール高さ</td>
+            <td id="scrollHeight"></td>
+        </tr>
+    </table>
 
     <script>
-        let score = 0;
-        let timer = 30;
-        let gameInterval;
+        document.getElementById('userAgent').textContent = navigator.userAgent;
+        document.getElementById('language').textContent = navigator.language;
+        document.getElementById('platform').textContent = navigator.platform;
+        document.getElementById('vendor').textContent = navigator.vendor;
+        document.getElementById('vendorSub').textContent = navigator.vendorSub || '情報なし';
+        document.getElementById('deviceMemory').textContent = navigator.deviceMemory || '情報なし';
+        document.getElementById('online').textContent = navigator.onLine ? 'オンライン' : 'オフライン';
+
+        document.getElementById('screenWidth').textContent = screen.width + 'px';
+        document.getElementById('screenHeight').textContent = screen.height + 'px';
+        document.getElementById('colorDepth').textContent = screen.colorDepth + 'ビット';
+        document.getElementById('resolution').textContent = `${screen.width} x ${screen.height} px`;
         
-        function updateStatus() {
-            document.getElementById('score').innerText = score;
-            document.getElementById('timer').innerText = timer;
+        if (window.screen.orientation) {
+            document.getElementById('orientation').textContent = window.screen.orientation.type;
+        } else {
+            document.getElementById('orientation').textContent = '情報なし';
         }
 
-        function incrementScore() {
-            score++;
-            updateStatus();
-        }
-
-        function startGame() {
-            score = 0;
-            timer = 30;
-            updateStatus();
-
-            gameInterval = setInterval(() => {
-                timer--;
-                updateStatus();
-
-                if (timer <= 0) {
-                    clearInterval(gameInterval);
-                    alert('ゲーム終了！ スコア: ' + score);
-                }
-            }, 1000);
-        }
-
-        window.onload = startGame;
+        document.getElementById('innerWidth').textContent = window.innerWidth + 'px';
+        document.getElementById('innerHeight').textContent = window.innerHeight + 'px';
+        document.getElementById('scrollWidth').textContent = document.documentElement.scrollWidth + 'px';
+        document.getElementById('scrollHeight').textContent = document.documentElement.scrollHeight + 'px';
     </script>
 </body>
 </html>
