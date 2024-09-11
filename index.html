@@ -3,28 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>サンプルページ</title>
+    <title>インタラクティブダッシュボード</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin-top: 20px;
+        }
+        .tabs {
+            display: flex;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
             text-align: center;
-            margin-top: 50px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .tab.active {
+            background-color: #007bff;
+            color: #fff;
+            border-color: #007bff;
+        }
+        .tab-content {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        canvas {
+            width: 100% !important;
+            height: 400px !important;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
         button {
             padding: 10px 20px;
-            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>ようこそ！</h1>
-    <p>ボタンをクリックしてみてください。</p>
-    <button onclick="showAlert()">クリックしてアラートを表示</button>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('chart')">グラフ</div>
+            <div class="tab" onclick="showTab('data')">データ入力</div>
+        </div>
+        <div id="chart-content" class="tab-content">
+            <h2>データグラフ</h2>
+            <canvas id="lineChart"></canvas>
+            <canvas id="barChart"></canvas>
+        </div>
+        <div id="data-content" class="tab-content" style="display: none;">
+            <h2>データ入力</h2>
+            <div class="form-group">
+                <label for="dataLabel">ラベル:</label>
+                <input type="text" id="dataLabel" placeholder="ラベルを入力">
+            </div>
+            <div class="form-group">
+                <label for="dataValue">値:</label>
+                <input type="number" id="dataValue" placeholder="値を入力">
+            </div>
+            <button onclick="addData()">データ追加</button>
+        </div>
+    </div>
 
     <script>
-        function showAlert() {
-            alert('ボタンがクリックされました！');
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        const barCtx = document.getElementById('barChart').getContext('2d');
+        let lineChart, barChart;
+
+        function createCharts(data) {
+            if (lineChart) lineChart.destroy();
+            if (barChart) barChart.destroy();
+
+            lineChart = new Chart(lineCtx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'データ系列',
+                        data: data.values,
+                        borderColor: '#007bff',
+                        backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            barChart = new Chart(barCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'データ系列',
+                        data: data.values,
+                        backgroundColor: '#007bff',
+                        borderColor: '#0056b3',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { beginAtZero: true },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function loadFromLocalStorage() {
+            const data = JSON.parse(localStorage.getItem('chartData')) || { labels: [], values: [] };
+            createCharts(data);
+        }
+
+        function saveToLocalStorage(data) {
+            localStorage.setItem('chartData', JSON.stringify(data));
+        }
+
+        function addData() {
+            const label = document.getElementById('dataLabel').value.trim();
+            const value = parseFloat(document.getElementById('dataValue').value.trim());
+            if (label === '' || isNaN(value)) return;
+
+            let data = JSON.parse(localStorage.getItem('chartData')) || { labels: [], values: [] };
+            data.labels.push(label);
+            data.values.push(value);
+
+            saveToLocalStorage(data);
+            createCharts(data);
+
+            document.getElementById('dataLabel').value = '';
+            document.getElementById('dataValue').value = '';
+        }
+
+        function showTab(tabId) {
+            document.getElementById('chart-content').style.display = tabId === 'chart' ? 'block' : 'none';
+            document.getElementById('data-content').style.display = tabId === 'data' ? 'block' : 'none';
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        window.onload = function() {
+            loadFromLocalStorage();
         }
     </script>
 </body>
