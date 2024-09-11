@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>スネークゲーム</title>
+    <title>クリックゲーム</title>
     <style>
         body {
             display: flex;
@@ -13,104 +13,73 @@
             margin: 0;
             background-color: #f0f0f0;
             font-family: Arial, sans-serif;
+            text-align: center;
         }
-        canvas {
-            background-color: #000;
-            border: 2px solid #fff;
+        .container {
+            max-width: 600px;
+            width: 100%;
         }
-        .score {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #333;
+        .button {
+            display: inline-block;
+            padding: 15px 30px;
             font-size: 24px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            margin-bottom: 20px;
+            font-size: 20px;
         }
     </style>
 </head>
 <body>
-    <div class="score">スコア: <span id="score">0</span></div>
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="container">
+        <div class="status">
+            <div>スコア: <span id="score">0</span></div>
+            <div>残り時間: <span id="timer">30</span> 秒</div>
+        </div>
+        <button class="button" onclick="incrementScore()">クリックしてスコアを増やす</button>
+    </div>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const box = 20;
-        const canvasSize = canvas.width / box;
         let score = 0;
-
-        const snake = [];
-        snake[0] = { x: 9 * box, y: 10 * box };
-
-        let food = {
-            x: Math.floor(Math.random() * canvasSize) * box,
-            y: Math.floor(Math.random() * canvasSize) * box
-        };
-
-        let d;
-        document.addEventListener('keydown', direction);
-
-        function direction(event) {
-            if (event.keyCode === 37 && d !== 'RIGHT') d = 'LEFT';
-            if (event.keyCode === 38 && d !== 'DOWN') d = 'UP';
-            if (event.keyCode === 39 && d !== 'LEFT') d = 'RIGHT';
-            if (event.keyCode === 40 && d !== 'UP') d = 'DOWN';
+        let timer = 30;
+        let gameInterval;
+        
+        function updateStatus() {
+            document.getElementById('score').innerText = score;
+            document.getElementById('timer').innerText = timer;
         }
 
-        function collision(head, array) {
-            for (let i = 0; i < array.length; i++) {
-                if (head.x === array[i].x && head.y === array[i].y) return true;
-            }
-            return false;
+        function incrementScore() {
+            score++;
+            updateStatus();
         }
 
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function startGame() {
+            score = 0;
+            timer = 30;
+            updateStatus();
 
-            for (let i = 0; i < snake.length; i++) {
-                ctx.fillStyle = i === 0 ? 'green' : 'white';
-                ctx.fillRect(snake[i].x, snake[i].y, box, box);
-                ctx.strokeStyle = 'black';
-                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
-            }
+            gameInterval = setInterval(() => {
+                timer--;
+                updateStatus();
 
-            ctx.fillStyle = 'red';
-            ctx.fillRect(food.x, food.y, box, box);
-
-            const snakeX = snake[0].x;
-            const snakeY = snake[0].y;
-
-            if (d === 'LEFT') snake[0].x -= box;
-            if (d === 'UP') snake[0].y -= box;
-            if (d === 'RIGHT') snake[0].x += box;
-            if (d === 'DOWN') snake[0].y += box;
-
-            if (snake[0].x >= canvas.width) snake[0].x = 0;
-            if (snake[0].x < 0) snake[0].x = canvas.width - box;
-            if (snake[0].y >= canvas.height) snake[0].y = 0;
-            if (snake[0].y < 0) snake[0].y = canvas.height - box;
-
-            for (let i = 1; i < snake.length; i++) {
-                if (snake[0].x === snake[i].x && snake[0].y === snake[i].y) {
-                    clearInterval(game);
-                    alert('ゲームオーバー');
+                if (timer <= 0) {
+                    clearInterval(gameInterval);
+                    alert('ゲーム終了！ スコア: ' + score);
                 }
-            }
-
-            if (snake[0].x === food.x && snake[0].y === food.y) {
-                score++;
-                document.getElementById('score').innerText = score;
-                food = {
-                    x: Math.floor(Math.random() * canvasSize) * box,
-                    y: Math.floor(Math.random() * canvasSize) * box
-                };
-                snake.push({});
-            }
-
-            let newHead = { x: snakeX, y: snakeY };
-            snake.pop();
-            snake.unshift(newHead);
+            }, 1000);
         }
 
-        const game = setInterval(draw, 100);
+        window.onload = startGame;
     </script>
 </body>
 </html>
