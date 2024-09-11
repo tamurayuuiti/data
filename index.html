@@ -59,15 +59,19 @@
     <script src="https://cdn.jsdelivr.net/npm/ua-parser-js@1.0.0/dist/ua-parser.min.js"></script>
     <script>
         function updateDeviceInfo() {
-            var parser = new UAParser();
-            var result = parser.getResult();
+            try {
+                var parser = new UAParser();
+                var result = parser.getResult();
 
-            document.getElementById('userAgent').textContent = navigator.userAgent || '情報なし';
-            document.getElementById('deviceName').textContent = result.device.model || '情報なし';
-            document.getElementById('browserName').textContent = result.browser.name || '情報なし';
-            document.getElementById('browserVersion').textContent = result.browser.version || '情報なし';
-            document.getElementById('osName').textContent = result.os.name || '情報なし';
-            document.getElementById('osVersion').textContent = result.os.version || '情報なし';
+                document.getElementById('userAgent').textContent = navigator.userAgent || '情報なし';
+                document.getElementById('deviceName').textContent = result.device.model || '情報なし';
+                document.getElementById('browserName').textContent = result.browser.name || '情報なし';
+                document.getElementById('browserVersion').textContent = result.browser.version || '情報なし';
+                document.getElementById('osName').textContent = result.os.name || '情報なし';
+                document.getElementById('osVersion').textContent = result.os.version || '情報なし';
+            } catch (error) {
+                console.error('デバイス情報の取得に失敗しました:', error);
+            }
         }
 
         // 初期表示
@@ -78,4 +82,3 @@
     </script>
 </body>
 </html>
-
