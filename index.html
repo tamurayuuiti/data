@@ -51,10 +51,12 @@
             // 各ログエントリを時間順にソートし、グラフデータを構成
             const sortedLogs = Object.entries(logs).sort((a, b) => new Date(a[1].timestamp) - new Date(b[1].timestamp));
             sortedLogs.forEach(([key, log]) => {
-                chartData.labels.push(log.timestamp); // ラベルにタイムスタンプを追加
+                const date = new Date(log.timestamp); // 日付オブジェクトを生成
+                chartData.labels.push(date); // ラベルに日付を追加
+
                 const targetDataset = chartData.datasets.find(dataset => dataset.label === log.type);
                 if (targetDataset) {
-                    targetDataset.data.push(log.newCount); // 各カウンターのデータを追加
+                    targetDataset.data.push({ x: date, y: log.newCount }); // 各カウンターのデータを追加
                 }
             });
 
@@ -64,24 +66,32 @@
                 data: chartData,
                 options: {
                     responsive: true,
-                    title: {
-                        display: true,
-                        text: 'カウンターの増減推移'
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'カウンターの増減推移'
+                        }
                     },
                     scales: {
                         x: {
                             type: 'time', // X軸を時間軸に設定
                             time: {
-                                parser: 'YYYY-MM-DD HH:mm:ss',
-                                tooltipFormat: 'll HH:mm'
+                                unit: 'minute', // 時間単位を指定
+                                displayFormats: {
+                                    minute: 'YYYY-MM-DD HH:mm'
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: '時間'
                             }
                         },
                         y: {
+                            beginAtZero: true,
                             title: {
                                 display: true,
                                 text: '個数'
-                            },
-                            beginAtZero: true
+                            }
                         }
                     }
                 }
