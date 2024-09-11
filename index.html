@@ -97,29 +97,37 @@
     </table>
 
     <script>
-        document.getElementById('userAgent').textContent = navigator.userAgent;
-        document.getElementById('language').textContent = navigator.language;
-        document.getElementById('platform').textContent = navigator.platform;
-        document.getElementById('vendor').textContent = navigator.vendor;
-        document.getElementById('vendorSub').textContent = navigator.vendorSub || '情報なし';
-        document.getElementById('deviceMemory').textContent = navigator.deviceMemory || '情報なし';
-        document.getElementById('online').textContent = navigator.onLine ? 'オンライン' : 'オフライン';
+        function updateDeviceInfo() {
+            document.getElementById('userAgent').textContent = navigator.userAgent || '情報なし';
+            document.getElementById('language').textContent = navigator.language || '情報なし';
+            document.getElementById('platform').textContent = navigator.platform || '情報なし';
+            document.getElementById('vendor').textContent = navigator.vendor || '情報なし';
+            document.getElementById('vendorSub').textContent = navigator.vendorSub || '情報なし';
+            document.getElementById('deviceMemory').textContent = navigator.deviceMemory || '情報なし';
+            document.getElementById('online').textContent = navigator.onLine ? 'オンライン' : 'オフライン';
 
-        document.getElementById('screenWidth').textContent = screen.width + 'px';
-        document.getElementById('screenHeight').textContent = screen.height + 'px';
-        document.getElementById('colorDepth').textContent = screen.colorDepth + 'ビット';
-        document.getElementById('resolution').textContent = `${screen.width} x ${screen.height} px`;
-        
-        if (window.screen.orientation) {
-            document.getElementById('orientation').textContent = window.screen.orientation.type;
-        } else {
-            document.getElementById('orientation').textContent = '情報なし';
+            document.getElementById('screenWidth').textContent = screen.width ? `${screen.width}px` : '情報なし';
+            document.getElementById('screenHeight').textContent = screen.height ? `${screen.height}px` : '情報なし';
+            document.getElementById('colorDepth').textContent = screen.colorDepth ? `${screen.colorDepth}ビット` : '情報なし';
+            document.getElementById('resolution').textContent = (screen.width && screen.height) ? `${screen.width} x ${screen.height} px` : '情報なし';
+            
+            if (window.screen.orientation) {
+                document.getElementById('orientation').textContent = window.screen.orientation.type || '情報なし';
+            } else {
+                document.getElementById('orientation').textContent = '情報なし';
+            }
+
+            document.getElementById('innerWidth').textContent = window.innerWidth ? `${window.innerWidth}px` : '情報なし';
+            document.getElementById('innerHeight').textContent = window.innerHeight ? `${window.innerHeight}px` : '情報なし';
+            document.getElementById('scrollWidth').textContent = document.documentElement.scrollWidth ? `${document.documentElement.scrollWidth}px` : '情報なし';
+            document.getElementById('scrollHeight').textContent = document.documentElement.scrollHeight ? `${document.documentElement.scrollHeight}px` : '情報なし';
         }
 
-        document.getElementById('innerWidth').textContent = window.innerWidth + 'px';
-        document.getElementById('innerHeight').textContent = window.innerHeight + 'px';
-        document.getElementById('scrollWidth').textContent = document.documentElement.scrollWidth + 'px';
-        document.getElementById('scrollHeight').textContent = document.documentElement.scrollHeight + 'px';
+        // 初期表示
+        updateDeviceInfo();
+
+        // ウィンドウサイズが変更されたときに情報を更新
+        window.addEventListener('resize', updateDeviceInfo);
     </script>
 </body>
 </html>
