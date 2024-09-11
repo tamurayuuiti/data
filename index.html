@@ -1,6 +1,92 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カウンターログ表示</title>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <!-- Firebase Realtime Database -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <!-- Include Chart.js from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
 <body>
-    Hello, World!
+    <h1>カウンターログの推移</h1>
+    <canvas id="counter-line-chart" width="800" height="400"></canvas>
+
+    <script>
+        // Firebaseの設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyDfmjWjPl786cVBXzqlsiZsS4MUFbwrNNM",
+            authDomain: "school-festival-e4c8d.firebaseapp.com",
+            databaseURL: "https://school-festival-e4c8d-default-rtdb.firebaseio.com",
+            projectId: "school-festival-e4c8d",
+            storageBucket: "school-festival-e4c8d.appspot.com",
+            messagingSenderId: "658868728855",
+            appId: "1:658868728855:web:8d7497c6838f5a42d21852"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const logsRef = database.ref('logs');
+
+        // ログデータの取得
+        logsRef.once('value', snapshot => {
+            const logs = snapshot.val();
+            if (!logs) return;
+
+            // ログデータを整形してグラフ用のデータを作成
+            const chartData = {
+                labels: [], // 時間ラベル
+                datasets: [
+                    { label: 'プレーン', data: [], borderColor: '#007BFF', fill: false },
+                    { label: 'チョコ', data: [], borderColor: '#8B4513', fill: false },
+                    { label: 'いちご', data: [], borderColor: '#FF6347', fill: false },
+                    { label: '抹茶', data: [], borderColor: '#3CB371', fill: false },
+                    { label: 'JDK', data: [], borderColor: '#FFD700', fill: false }
+                ]
+            };
+
+            // 各ログエントリを時間順にソートし、グラフデータを構成
+            const sortedLogs = Object.entries(logs).sort((a, b) => new Date(a[1].timestamp) - new Date(b[1].timestamp));
+            sortedLogs.forEach(([key, log]) => {
+                chartData.labels.push(log.timestamp); // ラベルにタイムスタンプを追加
+                const targetDataset = chartData.datasets.find(dataset => dataset.label === log.type);
+                if (targetDataset) {
+                    targetDataset.data.push(log.newCount); // 各カウンターのデータを追加
+                }
+            });
+
+            // グラフの描画
+            new Chart(document.getElementById('counter-line-chart'), {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    title: {
+                        display: true,
+                        text: 'カウンターの増減推移'
+                    },
+                    scales: {
+                        x: {
+                            type: 'time', // X軸を時間軸に設定
+                            time: {
+                                parser: 'YYYY-MM-DD HH:mm:ss',
+                                tooltipFormat: 'll HH:mm'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '個数'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 </body>
 </html>
