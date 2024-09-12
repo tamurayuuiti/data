@@ -23,16 +23,34 @@
         .chart-container {
             width: 80%;
             max-width: 800px;
+            overflow-x: auto; /* 横スクロールを有効にする */
             margin: 20px 0;
         }
         h2 {
             text-align: center;
+        }
+        .controls {
+            margin: 10px 0;
+        }
+        .controls label {
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
     <h1>データ分析 - グラフ表示</h1>
     
+    <!-- 時間範囲の設定 -->
+    <div class="controls">
+        <label>開始時刻:
+            <input type="datetime-local" id="startTime" />
+        </label>
+        <label>終了時刻:
+            <input type="datetime-local" id="endTime" />
+        </label>
+        <button onclick="fetchDataAndDrawCharts()">グラフを更新</button>
+    </div>
+
     <!-- Charts for Day 1 -->
     <h2>1日目のデータ</h2>
     <div class="chart-container">
@@ -70,6 +88,8 @@
     function fetchDataAndDrawCharts() {
         const countersRef = database.ref('counters');
         const logsRef = database.ref('logs');
+        const startTime = new Date(document.getElementById('startTime').value);
+        const endTime = new Date(document.getElementById('endTime').value);
 
         countersRef.once('value').then(snapshot => {
             const counters = snapshot.val();
@@ -81,12 +101,15 @@
             const day1Logs = [];
             const day2Logs = [];
 
-            // ログを日ごとに分ける
+            // ログを日ごとに分けて、指定された時間範囲内のデータのみを使用
             Object.values(logs).forEach(log => {
-                if (log.day === 'day1') {
-                    day1Logs.push(log);
-                } else if (log.day === 'day2') {
-                    day2Logs.push(log);
+                const logTime = new Date(log.timestamp);
+                if (logTime >= startTime && logTime <= endTime) {
+                    if (log.day === 'day1') {
+                        day1Logs.push(log);
+                    } else if (log.day === 'day2') {
+                        day2Logs.push(log);
+                    }
                 }
             });
 
@@ -177,6 +200,24 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time', // 時間ベースのスケール
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'MMM D, HH:mm'
+                            }
+                        },
+                        min: day1Data.timestamps[0],
+                        max: day1Data.timestamps[day1Data.timestamps.length - 1],
+                        ticks: {
+                            maxRotation: 0,
+                            autoSkip: true,
+                        }
+                    }
+                },
                 plugins: {
                     legend: {
                         position: 'top'
@@ -198,6 +239,24 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'MMM D, HH:mm'
+                            }
+                        },
+                        min: day2Data.timestamps[0],
+                        max: day2Data.timestamps[day2Data.timestamps.length - 1],
+                        ticks: {
+                            maxRotation: 0,
+                            autoSkip: true,
+                        }
+                    }
+                },
                 plugins: {
                     legend: {
                         position: 'top'
