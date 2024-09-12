@@ -20,7 +20,7 @@
             overflow-x: auto; /* 横スクロールを可能にする */
         }
         .chart-container canvas {
-            min-width: 800px; /* 最小幅を設定して横スクロールを発生させる */
+            min-width: 1200px; /* 十分な最小幅を設定して横スクロールを発生させる */
         }
     </style>
 </head>
@@ -55,7 +55,7 @@
         const logRef = database.ref('logs');
 
         // 期間設定
-        const day1Start = new Date('2024-09-13T00:00:00'); // 1日目の期間を13日に変更
+        const day1Start = new Date('2024-09-13T00:00:00'); // 1日目の期間を13日に設定
         const day1End = new Date('2024-09-13T23:59:59');
         const day2Start = new Date('2024-09-14T09:00:00');
         const day2End = new Date('2024-09-14T16:00:00');
@@ -118,7 +118,9 @@
                     labels.push(timestamp);
                 }
 
-                dataByType[type].push(count);
+                if (dataByType[type]) {
+                    dataByType[type].push({ x: timestamp, y: count });
+                }
             }
 
             return { labels, dataByType };
@@ -170,7 +172,10 @@
                         x: {
                             type: 'time',
                             time: {
-                                unit: 'minute'
+                                unit: 'minute',
+                                displayFormats: {
+                                    minute: 'HH:mm' // 24時間表記を設定
+                                }
                             },
                             min: minDate, // 最小表示日時
                             max: maxDate  // 最大表示日時
