@@ -34,9 +34,12 @@
         }
         .scrollable-chart {
             width: 100%;
-            max-width: 1000px; /* 横スクロールを考慮した幅 */
             overflow-x: auto; /* 横スクロールを有効にする */
             margin: 20px 0;
+            white-space: nowrap; /* 子要素を折り返さずに横並びにする */
+        }
+        .scrollable-chart canvas {
+            min-width: 1000px; /* 横幅を広くすることでスクロールを発生させる */
         }
         h2 {
             text-align: center;
@@ -246,6 +249,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                spanGaps: false,
                 scales: {
                     x: {
                         type: 'time',
@@ -285,6 +289,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                spanGaps: false,
                 scales: {
                     x: {
                         type: 'time',
