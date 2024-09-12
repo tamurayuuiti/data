@@ -73,13 +73,13 @@
                 if (day1Chart) {
                     updateChart(day1Chart, prepareChartData(day1Data));
                 } else {
-                    day1Chart = drawChart('day1Chart', prepareChartData(day1Data));
+                    day1Chart = drawChart('day1Chart', prepareChartData(day1Data), day1Start, day1End);
                 }
 
                 if (day2Chart) {
                     updateChart(day2Chart, prepareChartData(day2Data));
                 } else {
-                    day2Chart = drawChart('day2Chart', prepareChartData(day2Data));
+                    day2Chart = drawChart('day2Chart', prepareChartData(day2Data), day2Start, day2End);
                 }
             }
         });
@@ -125,7 +125,7 @@
         }
 
         // グラフ描画
-        function drawChart(canvasId, chartData) {
+        function drawChart(canvasId, chartData, minDate, maxDate) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             return new Chart(ctx, {
                 type: 'line',
@@ -171,7 +171,9 @@
                             type: 'time',
                             time: {
                                 unit: 'minute'
-                            }
+                            },
+                            min: minDate, // 最小表示日時
+                            max: maxDate  // 最大表示日時
                         },
                         y: {
                             beginAtZero: true
@@ -181,10 +183,12 @@
                         zoom: {
                             zoom: {
                                 wheel: {
-                                    enabled: true // ズーム機能をマウスホイールで有効化
+                                    enabled: true,
+                                    speed: 0.1 // ズームの速度を遅くする
                                 },
                                 pinch: {
-                                    enabled: true // タッチスクリーンでのピンチズームを有効化
+                                    enabled: true,
+                                    speed: 0.1 // ピンチズームの速度を遅くする
                                 },
                                 mode: 'x' // x軸方向のみズーム
                             }
