@@ -19,6 +19,7 @@
             width: 100%;
             overflow-x: auto; /* 横スクロールを可能にする */
             white-space: nowrap; /* 要素が折り返されないようにする */
+            touch-action: pan-x pan-y; /* タッチスクロールを有効にする */
         }
         .chart-container canvas {
             min-width: 1200px; /* 十分な最小幅を設定して横スクロールを発生させる */
@@ -191,12 +192,10 @@
                     },
                     plugins: {
                         zoom: {
-                            limits: {
-                                x: { min: minDate.getTime(), max: maxDate.getTime() } // ズームの制限を設定
-                            },
                             pan: {
                                 enabled: true,
                                 mode: 'x', // x軸方向のみパン
+                                modifierKey: 'alt', // Altキーを押しながらでパンが有効
                                 rangeMin: { x: minDate.getTime() }, // パンの最小限度
                                 rangeMax: { x: maxDate.getTime() }  // パンの最大限度
                             },
