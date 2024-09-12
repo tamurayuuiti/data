@@ -187,7 +187,14 @@
                             max: maxDate  // 最大表示日時
                         },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            suggestedMin: 0, // 最小値は0から
+                            ticks: {
+                                stepSize: 1, // 自然数のステップサイズ
+                                callback: function(value) {
+                                    return Number.isInteger(value) ? value : ''; // 少数を表示しない
+                                }
+                            }
                         }
                     },
                     plugins: {
@@ -195,7 +202,6 @@
                             pan: {
                                 enabled: true,
                                 mode: 'x', // x軸方向のみパン
-                                modifierKey: 'alt', // Altキーを押しながらでパンが有効
                                 rangeMin: { x: minDate.getTime() }, // パンの最小限度
                                 rangeMax: { x: maxDate.getTime() }  // パンの最大限度
                             },
