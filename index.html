@@ -110,7 +110,7 @@
 
             for (const key in logs) {
                 const log = logs[key];
-                const timestamp = log.timestamp;
+                const timestamp = new Date(log.timestamp); // 修正：日付をパースしてオブジェクトにする
                 const type = log.type;
                 const count = log.newCount;
 
