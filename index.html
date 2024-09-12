@@ -7,10 +7,11 @@
     <!-- Include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <!-- Include Chart.js and Luxon Adapter -->
+    <!-- Include Chart.js, Luxon Adapter, and Data Labels Plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -34,12 +35,12 @@
         }
         .scrollable-chart {
             width: 100%;
-            overflow-x: auto; /* 横スクロールを有効にする */
+            overflow-x: auto; /* Enable horizontal scrolling */
             margin: 20px 0;
-            white-space: nowrap; /* 子要素を折り返さずに横並びにする */
+            white-space: nowrap; /* Prevent child elements from wrapping */
         }
         .scrollable-chart canvas {
-            min-width: 1000px; /* 横幅を広くすることでスクロールを発生させる */
+            min-width: 1000px; /* Increase width to enable scrolling */
         }
         h2 {
             text-align: center;
@@ -203,6 +204,10 @@
             },
             options: {
                 responsive: true,
+                animation: {
+                    animateRotate: true,
+                    animateScale: true
+                },
                 plugins: {
                     legend: {
                         position: 'top'
@@ -210,9 +215,16 @@
                     title: {
                         display: true,
                         text: '1日目の販売数分布'
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        formatter: (value, context) => {
+                            return value > 0 ? value : '';
+                        }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
         });
 
         // 2日目の円グラフ
@@ -233,6 +245,10 @@
             },
             options: {
                 responsive: true,
+                animation: {
+                    animateRotate: true,
+                    animateScale: true
+                },
                 plugins: {
                     legend: {
                         position: 'top'
@@ -240,9 +256,16 @@
                     title: {
                         display: true,
                         text: '2日目の販売数分布'
+                    },
+                    datalabels: {
+                        color: '#fff',
+                        formatter: (value, context) => {
+                            return value > 0 ? value : '';
+                        }
                     }
                 }
-            }
+            },
+            plugins: [ChartDataLabels]
         });
     }
 
@@ -393,6 +416,7 @@
     }
 
     // 初期化
+    fetchDataAndDrawCharts();
     setupRealtimeListeners();
     </script>
 </body>
