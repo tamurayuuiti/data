@@ -25,13 +25,18 @@
         .chart-container {
             width: 80%;
             max-width: 800px;
-            overflow-x: auto;
             margin: 20px 0;
         }
         .small-chart {
             width: 300px;
             height: 300px;
             margin: 20px auto;
+        }
+        .scrollable-chart {
+            width: 100%;
+            max-width: 1000px; /* 横スクロールを考慮した幅 */
+            overflow-x: auto; /* 横スクロールを有効にする */
+            margin: 20px 0;
         }
         h2 {
             text-align: center;
@@ -75,7 +80,7 @@
     <div class="chart-container small-chart">
         <canvas id="day1PieChart"></canvas>
     </div>
-    <div class="chart-container">
+    <div class="scrollable-chart">
         <canvas id="day1LineChart"></canvas>
     </div>
 
@@ -84,7 +89,7 @@
     <div class="chart-container small-chart">
         <canvas id="day2PieChart"></canvas>
     </div>
-    <div class="chart-container">
+    <div class="scrollable-chart">
         <canvas id="day2LineChart"></canvas>
     </div>
 
