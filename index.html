@@ -30,12 +30,12 @@
 <body>
     <h1>カウント数の推移グラフ</h1>
 
-    <h2>1日目 (2024年9月13日 00:00 - 23:59)</h2>
+    <h2>1日目 (2024年9月13日 10:00 - 15:00)</h2>
     <div class="chart-container">
         <canvas id="day1Chart" width="800" height="200"></canvas>
     </div>
     
-    <h2>2日目 (2024年9月14日 09:00 - 16:00)</h2>
+    <h2>2日目 (2024年9月14日 10:00 - 15:30)</h2>
     <div class="chart-container">
         <canvas id="day2Chart" width="800" height="200"></canvas>
     </div>
@@ -58,10 +58,10 @@
         const logRef = database.ref('logs');
 
         // 期間設定
-        const day1Start = new Date('2024-09-13T00:00:00'); // 1日目の期間を13日に設定
-        const day1End = new Date('2024-09-13T23:59:59');
-        const day2Start = new Date('2024-09-14T09:00:00');
-        const day2End = new Date('2024-09-14T16:00:00');
+        const day1Start = new Date('2024-09-13T10:00:00'); // 1日目の期間を13日の10時から15時までに設定
+        const day1End = new Date('2024-09-13T15:00:00');
+        const day2Start = new Date('2024-09-14T10:00:00'); // 2日目の期間を14日の10時から15時半までに設定
+        const day2End = new Date('2024-09-14T15:30:00');
 
         let day1Chart, day2Chart; // グラフオブジェクトを保持する変数
         let day1ZoomState = { x: { min: day1Start.getTime(), max: day1End.getTime() } }; // 1日目のズーム状態
@@ -202,42 +202,44 @@
                             limits: {
                                 x: { min: minDate.getTime(), max: maxDate.getTime() } // ズームの制限を設定
                             },
-                            pan: {                            enabled: true,
-                            mode: 'x', // x軸方向のみパン
-                            rangeMin: { x: minDate.getTime() }, // パンの最小限度
-                            rangeMax: { x: maxDate.getTime() }  // パンの最大限度
-                        },
-                        zoom: {
-                            wheel: {
+                            pan: {
                                 enabled: true,
-                                speed: 0.05, // ズームの速度を調整
-                                rangeMin: { x: minDate.getTime() } // デフォルトよりズームアウトしない
+                                mode: 'x', // x軸方向のみパン
+                                rangeMin: { x: minDate.getTime() }, // パンの最小限度
+                                rangeMax: { x: maxDate.getTime() }  // パンの最大限度
                             },
-                            pinch: {
-                                enabled: true,
-                                speed: 0.05, // ピンチズームの速度を調整
-                                rangeMin: { x: minDate.getTime() } // デフォルトよりズームアウトしない
-                            },
-                            mode: 'x' // x軸方向のみズーム
+                            zoom: {
+                                wheel: {
+                                    enabled: true,
+                                    speed: 0.05, // ズームの速度を調整
+                                    rangeMin: { x: minDate.getTime() } // デフォルトよりズームアウトしない
+                                },
+                                pinch: {
+                                    enabled: true,
+                                    speed: 0.05, // ピンチズームの速度を調整
+                                    rangeMin: { x: minDate.getTime() } // デフォルトよりズームアウトしない
+                                },
+                                mode: 'x' // x軸方向のみズーム
+                            }
                         }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // グラフを更新
-    function updateChart(chart, chartData, zoomState) {
-        chart.data.labels = chartData.labels;
-        chart.data.datasets.forEach((dataset, index) => {
-            dataset.data = chartData.dataByType[Object.keys(chartData.dataByType)[index]];
-        });
+        // グラフを更新
+        function updateChart(chart, chartData, zoomState) {
+            chart.data.labels = chartData.labels;
+            chart.data.datasets.forEach((dataset, index) => {
+                dataset.data = chartData.dataByType[Object.keys(chartData.dataByType)[index]];
+            });
 
-        // ズームとパンの状態を保持
-        chart.options.plugins.zoom.limits.x.min = zoomState.x.min;
-        chart.options.plugins.zoom.limits.x.max = zoomState.x.max;
+            // ズームとパンの状態を保持
+            chart.options.plugins.zoom.limits.x.min = zoomState.x.min;
+            chart.options.plugins.zoom.limits.x.max = zoomState.x.max;
 
-        chart.update();
-    }
-</script>
-
+            chart.update();
+        }
+    </script>
+</body>
+</html>
