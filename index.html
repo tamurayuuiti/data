@@ -105,7 +105,6 @@
 
     // データを取得してグラフを描画する
     function fetchDataAndDrawCharts() {
-        const countersRef = database.ref('counters');
         const logsRef = database.ref('logs');
         const day1StartTime = new Date(document.getElementById('day1StartTime').value);
         const day1EndTime = new Date(document.getElementById('day1EndTime').value);
@@ -253,16 +252,14 @@
             jdk: []
         };
 
-        // 各カウンターの累積値を計算
-        const counters = { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
-
         logs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // 時間順にソート
 
         logs.forEach(log => {
             const timestamp = new Date(log.timestamp);
             timestamps.push(timestamp);
-            counters[log.type] += log.change; // 増加または減少を反映
-            datasets[log.type].push(counters[log.type]);
+
+            // 各ログのカウント数の値をそのまま使用
+            datasets[log.type].push(log.newCount);
         });
 
         return {
