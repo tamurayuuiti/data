@@ -114,6 +114,26 @@
     // グラフインスタンスの保持用変数
     let day1PieChart, day2PieChart, day1LineChart, day2LineChart;
 
+    // データを取得してグラフを描画する
+    function fetchDataAndDrawCharts() {
+        const countersRef = database.ref('counters');
+        const logsRef = database.ref('logs');
+        const day1StartTime = new Date(document.getElementById('day1StartTime').value);
+        const day1EndTime = new Date(document.getElementById('day1EndTime').value);
+        const day2StartTime = new Date(document.getElementById('day2StartTime').value);
+        const day2EndTime = new Date(document.getElementById('day2EndTime').value);
+
+        countersRef.once('value').then(snapshot => {
+            const counters = snapshot.val();
+            drawPieCharts(counters.day1, counters.day2);
+        });
+
+        logsRef.once('value').then(snapshot => {
+            const logs = snapshot.val();
+            processLogUpdates(logs);
+        });
+    }
+
     // リアルタイムデータのリスナーを設定
     function setupRealtimeListeners() {
         const countersRef = database.ref('counters');
@@ -372,7 +392,7 @@
         };
     }
 
-    fetchDataAndDrawCharts();
+    // 初期化
     setupRealtimeListeners();
     </script>
 </body>
