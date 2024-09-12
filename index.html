@@ -118,9 +118,13 @@
     }
 
     // 円グラフを描画する
-    function drawPieCharts(day1Data, day2Data) {
+    function drawPieCharts(day1Data = {}, day2Data = {}) {
         const day1PieChartCtx = document.getElementById('day1PieChart').getContext('2d');
         const day2PieChartCtx = document.getElementById('day2PieChart').getContext('2d');
+
+        // データがない場合の初期化
+        day1Data = day1Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
+        day2Data = day2Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
 
         // 1日目の円グラフ
         new Chart(day1PieChartCtx, {
@@ -129,11 +133,11 @@
                 labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
                 datasets: [{
                     data: [
-                        day1Data.plain,
-                        day1Data.choco,
-                        day1Data.strawberry,
-                        day1Data.matcha,
-                        day1Data.jdk
+                        day1Data.plain || 0,
+                        day1Data.choco || 0,
+                        day1Data.strawberry || 0,
+                        day1Data.matcha || 0,
+                        day1Data.jdk || 0
                     ],
                     backgroundColor: ['#007BFF', '#8B4513', '#FF6347', '#3CB371', '#FFD700']
                 }]
@@ -159,11 +163,11 @@
                 labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
                 datasets: [{
                     data: [
-                        day2Data.plain,
-                        day2Data.choco,
-                        day2Data.strawberry,
-                        day2Data.matcha,
-                        day2Data.jdk
+                        day2Data.plain || 0,
+                        day2Data.choco || 0,
+                        day2Data.strawberry || 0,
+                        day2Data.matcha || 0,
+                        day2Data.jdk || 0
                     ],
                     backgroundColor: ['#007BFF', '#8B4513', '#FF6347', '#3CB371', '#FFD700']
                 }]
@@ -184,7 +188,7 @@
     }
 
     // 折れ線グラフを描画する
-    function drawLineCharts(day1Logs, day2Logs) {
+    function drawLineCharts(day1Logs = [], day2Logs = []) {
         const day1LineChartCtx = document.getElementById('day1LineChart').getContext('2d');
         const day2LineChartCtx = document.getElementById('day2LineChart').getContext('2d');
 
@@ -210,8 +214,8 @@
                                 hour: 'MMM D, HH:mm'
                             }
                         },
-                        min: day1Data.timestamps[0],
-                        max: day1Data.timestamps[day1Data.timestamps.length - 1],
+                        min: day1Data.timestamps[0] || null,
+                        max: day1Data.timestamps[day1Data.timestamps.length - 1] || null,
                         ticks: {
                             maxRotation: 0,
                             autoSkip: true,
@@ -249,8 +253,8 @@
                                 hour: 'MMM D, HH:mm'
                             }
                         },
-                        min: day2Data.timestamps[0],
-                        max: day2Data.timestamps[day2Data.timestamps.length - 1],
+                        min: day2Data.timestamps[0] || null,
+                        max: day2Data.timestamps[day2Data.timestamps.length - 1] || null,
                         ticks: {
                             maxRotation: 0,
                             autoSkip: true,
@@ -282,9 +286,8 @@
         };
 
         logs.forEach(log => {
-            if (!timestamps.includes(log.timestamp)) {
-                timestamps.push(log.timestamp);
-            }
+            const timestamp = new Date(log.timestamp);
+            timestamps.push(timestamp);
             datasets[log.type].push(log.newCount);
         });
 
