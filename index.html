@@ -18,9 +18,11 @@
         .chart-container {
             width: 100%;
             overflow-x: auto; /* 横スクロールを可能にする */
+            white-space: nowrap; /* 要素が折り返されないようにする */
         }
         .chart-container canvas {
             min-width: 1200px; /* 十分な最小幅を設定して横スクロールを発生させる */
+            display: inline-block; /* インラインブロックでスクロールを可能にする */
         }
     </style>
 </head>
@@ -61,6 +63,8 @@
         const day2End = new Date('2024-09-14T16:00:00');
 
         let day1Chart, day2Chart; // グラフオブジェクトを保持する変数
+        let day1ZoomState = { x: { min: day1Start.getTime(), max: day1End.getTime() } }; // 1日目のズーム状態
+        let day2ZoomState = { x: { min: day2Start.getTime(), max: day2End.getTime() } }; // 2日目のズーム状態
 
         // リアルタイムでデータを監視
         logRef.on('value', snapshot => {
@@ -71,13 +75,13 @@
 
                 // グラフが既に存在する場合は更新、そうでない場合は新規描画
                 if (day1Chart) {
-                    updateChart(day1Chart, prepareChartData(day1Data), day1Start, day1End);
+                    updateChart(day1Chart, prepareChartData(day1Data), day1ZoomState);
                 } else {
                     day1Chart = drawChart('day1Chart', prepareChartData(day1Data), day1Start, day1End);
                 }
 
                 if (day2Chart) {
-                    updateChart(day2Chart, prepareChartData(day2Data), day2Start, day2End);
+                    updateChart(day2Chart, prepareChartData(day2Data), day2ZoomState);
                 } else {
                     day2Chart = drawChart('day2Chart', prepareChartData(day2Data), day2Start, day2End);
                 }
@@ -168,6 +172,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     scales: {
                         x: {
                             type: 'time',
@@ -213,15 +218,15 @@
         }
 
         // グラフを更新
-        function updateChart(chart, chartData, minDate, maxDate) {
+        function updateChart(chart, chartData, zoomState) {
             chart.data.labels = chartData.labels;
             chart.data.datasets.forEach((dataset, index) => {
                 dataset.data = chartData.dataByType[Object.keys(chartData.dataByType)[index]];
             });
 
-            // 軸の最小・最大値を更新
-            chart.options.scales.x.min = minDate;
-            chart.options.scales.x.max = maxDate;
+            // ズームとパンの状態を保持
+            chart.options.plugins.zoom.limits.x.min = zoomState.x.min;
+            chart.options.plugins.zoom.limits.x.max = zoomState.x.max;
 
             chart.update();
         }
