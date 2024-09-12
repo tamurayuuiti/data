@@ -23,8 +23,13 @@
         .chart-container {
             width: 80%;
             max-width: 800px;
-            overflow-x: auto; /* 横スクロールを有効にする */
+            overflow-x: auto;
             margin: 20px 0;
+        }
+        .small-chart {
+            width: 300px; /* 円グラフのサイズを小さく設定 */
+            height: 300px;
+            margin: 20px auto;
         }
         h2 {
             text-align: center;
@@ -40,20 +45,32 @@
 <body>
     <h1>データ分析 - グラフ表示</h1>
     
-    <!-- 時間範囲の設定 -->
+    <!-- 1日目の時間範囲の設定 -->
     <div class="controls">
+        <h2>1日目の時間範囲</h2>
         <label>開始時刻:
-            <input type="datetime-local" id="startTime" />
+            <input type="datetime-local" id="day1StartTime" />
         </label>
         <label>終了時刻:
-            <input type="datetime-local" id="endTime" />
+            <input type="datetime-local" id="day1EndTime" />
+        </label>
+    </div>
+
+    <!-- 2日目の時間範囲の設定 -->
+    <div class="controls">
+        <h2>2日目の時間範囲</h2>
+        <label>開始時刻:
+            <input type="datetime-local" id="day2StartTime" />
+        </label>
+        <label>終了時刻:
+            <input type="datetime-local" id="day2EndTime" />
         </label>
         <button onclick="fetchDataAndDrawCharts()">グラフを更新</button>
     </div>
 
     <!-- Charts for Day 1 -->
     <h2>1日目のデータ</h2>
-    <div class="chart-container">
+    <div class="chart-container small-chart">
         <canvas id="day1PieChart"></canvas>
     </div>
     <div class="chart-container">
@@ -62,7 +79,7 @@
 
     <!-- Charts for Day 2 -->
     <h2>2日目のデータ</h2>
-    <div class="chart-container">
+    <div class="chart-container small-chart">
         <canvas id="day2PieChart"></canvas>
     </div>
     <div class="chart-container">
@@ -88,8 +105,10 @@
     function fetchDataAndDrawCharts() {
         const countersRef = database.ref('counters');
         const logsRef = database.ref('logs');
-        const startTime = new Date(document.getElementById('startTime').value);
-        const endTime = new Date(document.getElementById('endTime').value);
+        const day1StartTime = new Date(document.getElementById('day1StartTime').value);
+        const day1EndTime = new Date(document.getElementById('day1EndTime').value);
+        const day2StartTime = new Date(document.getElementById('day2StartTime').value);
+        const day2EndTime = new Date(document.getElementById('day2EndTime').value);
 
         countersRef.once('value').then(snapshot => {
             const counters = snapshot.val();
@@ -101,15 +120,19 @@
             const day1Logs = [];
             const day2Logs = [];
 
-            // ログを日ごとに分けて、指定された時間範囲内のデータのみを使用
+            // 1日目のログを指定された時間範囲内にフィルタリング
             Object.values(logs).forEach(log => {
                 const logTime = new Date(log.timestamp);
-                if (logTime >= startTime && logTime <= endTime) {
-                    if (log.day === 'day1') {
-                        day1Logs.push(log);
-                    } else if (log.day === 'day2') {
-                        day2Logs.push(log);
-                    }
+                if (log.day === 'day1' && logTime >= day1StartTime && logTime <= day1EndTime) {
+                    day1Logs.push(log);
+                }
+            });
+
+            // 2日目のログを指定された時間範囲内にフィルタリング
+            Object.values(logs).forEach(log => {
+                const logTime = new Date(log.timestamp);
+                if (log.day === 'day2' && logTime >= day2StartTime && logTime <= day2EndTime) {
+                    day2Logs.push(log);
                 }
             });
 
@@ -207,7 +230,7 @@
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        type: 'time', // 時間ベースのスケール
+                        type: 'time',
                         time: {
                             unit: 'hour',
                             displayFormats: {
