@@ -20,7 +20,7 @@
             overflow-x: auto; /* 横スクロールを可能にする */
         }
         .chart-container canvas {
-            min-width: 600px; /* 最小幅を小さくして横スクロールを発生させやすくする */
+            min-width: 800px; /* 最小幅を設定して横スクロールを発生させる */
         }
     </style>
 </head>
@@ -110,7 +110,7 @@
 
             for (const key in logs) {
                 const log = logs[key];
-                const timestamp = new Date(log.timestamp); // 修正：日付をパースしてオブジェクトにする
+                const timestamp = new Date(log.timestamp); // 日付をパースしてオブジェクトにする
                 const type = log.type;
                 const count = log.newCount;
 
@@ -210,11 +210,9 @@
         // グラフを更新
         function updateChart(chart, chartData, minDate, maxDate) {
             chart.data.labels = chartData.labels;
-            chart.data.datasets[0].data = chartData.dataByType.plain;
-            chart.data.datasets[1].data = chartData.dataByType.choco;
-            chart.data.datasets[2].data = chartData.dataByType.strawberry;
-            chart.data.datasets[3].data = chartData.dataByType.matcha;
-            chart.data.datasets[4].data = chartData.dataByType.jdk;
+            chart.data.datasets.forEach((dataset, index) => {
+                dataset.data = chartData.dataByType[Object.keys(chartData.dataByType)[index]];
+            });
 
             // 軸の最小・最大値を更新
             chart.options.scales.x.min = minDate;
