@@ -170,7 +170,6 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                spanGaps: false,
                 scales: {
                     x: {
                         type: 'time',
@@ -185,6 +184,13 @@
                         ticks: {
                             maxRotation: 0,
                             autoSkip: true,
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'カウント数'
                         }
                     }
                 },
@@ -210,7 +216,6 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                spanGaps: false,
                 scales: {
                     x: {
                         type: 'time',
@@ -225,6 +230,13 @@
                         ticks: {
                             maxRotation: 0,
                             autoSkip: true,
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'カウント数'
                         }
                     }
                 },
