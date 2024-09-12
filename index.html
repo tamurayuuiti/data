@@ -3,55 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カウントログの折れ線グラフ</title>
-    <style>
-        /* CSSの設定 */
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .chart-container {
-            width: 90%;
-            height: 400px;
-            margin: 20px auto;
-            overflow-x: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background-color: #fff;
-        }
-        .controls {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .controls label {
-            margin-right: 10px;
-            font-size: 16px;
-        }
-        .controls input {
-            margin-right: 10px;
-        }
-    </style>
-    <!-- FirebaseとChart.jsのインクルード -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <title>カウント数の推移グラフ</title>
+    <!-- Chart.js ライブラリの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <!-- Firebase Realtime Database -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 </head>
 <body>
-    <div class="controls">
-        <label for="start-date">開始日時:</label>
-        <input type="datetime-local" id="start-date" value="2024-09-01T00:00">
-        <label for="end-date">終了日時:</label>
-        <input type="datetime-local" id="end-date" value="2024-09-02T23:59">
-        <button onclick="updateGraph()">グラフを更新</button>
-    </div>
-    <div class="chart-container">
-        <canvas id="chart1"></canvas>
-    </div>
-    <div class="chart-container">
-        <canvas id="chart2"></canvas>
-    </div>
+    <h1>カウント数の推移グラフ</h1>
+    <h2>1日目 (2024年9月12日 00:00 - 23:59)</h2>
+    <canvas id="day1Chart" width="400" height="200"></canvas>
+    
+    <h2>2日目 (2024年9月14日 09:00 - 16:00)</h2>
+    <canvas id="day2Chart" width="400" height="200"></canvas>
 
     <script>
         // Firebaseの設定
@@ -65,99 +31,124 @@
             appId: "1:658868728855:web:8d7497c6838f5a42d21852"
         };
 
-        // Firebase初期化
+        // Firebaseの初期化
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const logRef = database.ref('logs');
 
-        let chart1, chart2;
+        // 期間設定
+        const day1Start = new Date('2024-09-12T00:00:00');
+        const day1End = new Date('2024-09-12T23:59:59');
+        const day2Start = new Date('2024-09-14T09:00:00');
+        const day2End = new Date('2024-09-14T16:00:00');
 
-        function updateGraph() {
-            const startDate = new Date(document.getElementById('start-date').value);
-            const endDate = new Date(document.getElementById('end-date').value);
-
-            // タイムスタンプのISO文字列で範囲指定
-            const startTimestamp = startDate.toISOString();
-            const endTimestamp = endDate.toISOString();
-
-            // ログデータをFirebaseから取得
-            const logsRef = database.ref('logs');
-            logsRef.orderByChild('timestamp').startAt(startTimestamp).endAt(endTimestamp).once('value', snapshot => {
+        // リアルタイムでデータを監視
+        logRef.on('value', snapshot => {
+            if (snapshot.exists()) {
                 const logs = snapshot.val();
-                const day1Data = [];
-                const day2Data = [];
-                if (logs) {
-                    // 取得したログデータを基にデータを整形
-                    Object.keys(logs).forEach(key => {
-                        const log = logs[key];
-                        const logTime = new Date(log.timestamp);
-                        const dataPoint = { x: logTime, y: log.newCount };
+                const day1Data = filterDataByDate(logs, day1Start, day1End);
+                const day2Data = filterDataByDate(logs, day2Start, day2End);
+                drawChart('day1Chart', prepareChartData(day1Data));
+                drawChart('day2Chart', prepareChartData(day2Data));
+            }
+        });
 
-                        if (log.day === 'day1') {
-                            day1Data.push(dataPoint);
-                        } else if (log.day === 'day2') {
-                            day2Data.push(dataPoint);
-                        }
-                    });
-
-                    // グラフを描画
-                    drawChart('chart1', day1Data, '1日目のカウントログ');
-                    drawChart('chart2', day2Data, '2日目のカウントログ');
-                } else {
-                    alert("指定した期間のデータが見つかりませんでした。");
+        // 日付範囲でデータをフィルタリング
+        function filterDataByDate(logs, startDate, endDate) {
+            const filteredData = {};
+            for (const key in logs) {
+                const log = logs[key];
+                const timestamp = new Date(log.timestamp);
+                if (timestamp >= startDate && timestamp <= endDate) {
+                    filteredData[key] = log;
                 }
-            });
+            }
+            return filteredData;
         }
 
-        function drawChart(canvasId, data, label) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
-            if (window[canvasId]) {
-                window[canvasId].destroy(); // 前のグラフを破棄
+        // ログデータを時系列で整形
+        function prepareChartData(logs) {
+            const dataByType = {
+                plain: [],
+                choco: [],
+                strawberry: [],
+                matcha: [],
+                jdk: []
+            };
+            const labels = [];
+
+            for (const key in logs) {
+                const log = logs[key];
+                const timestamp = log.timestamp;
+                const type = log.type;
+                const count = log.newCount;
+
+                if (!labels.includes(timestamp)) {
+                    labels.push(timestamp);
+                }
+
+                dataByType[type].push(count);
             }
 
-            window[canvasId] = new Chart(ctx, {
+            return { labels, dataByType };
+        }
+
+        // グラフ描画
+        function drawChart(canvasId, chartData) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
                 type: 'line',
                 data: {
-                    datasets: [{
-                        label: label,
-                        data: data,
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.1
-                    }]
+                    labels: chartData.labels,
+                    datasets: [
+                        {
+                            label: 'プレーン',
+                            data: chartData.dataByType.plain,
+                            borderColor: 'blue',
+                            fill: false
+                        },
+                        {
+                            label: 'チョコ',
+                            data: chartData.dataByType.choco,
+                            borderColor: 'brown',
+                            fill: false
+                        },
+                        {
+                            label: 'いちご',
+                            data: chartData.dataByType.strawberry,
+                            borderColor: 'red',
+                            fill: false
+                        },
+                        {
+                            label: '抹茶',
+                            data: chartData.dataByType.matcha,
+                            borderColor: 'green',
+                            fill: false
+                        },
+                        {
+                            label: 'JDK',
+                            data: chartData.dataByType.jdk,
+                            borderColor: 'yellow',
+                            fill: false
+                        }
+                    ]
                 },
                 options: {
+                    responsive: true,
                     scales: {
                         x: {
                             type: 'time',
                             time: {
-                                unit: 'hour'
+                                unit: 'minute'
                             }
                         },
                         y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'カウント数'
-                            }
-                        }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false
+                            beginAtZero: true
                         }
                     }
                 }
             });
         }
-
-        window.onload = updateGraph;
     </script>
 </body>
 </html>
