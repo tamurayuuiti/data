@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>グラフ表示サイト</title>
-    <!-- Include Firebase SDK -->
+    <title>データ分析 - 折れ線グラフ表示</title>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <!-- Include Chart.js and Luxon Adapter -->
+    <!-- Chart.js and Luxon Adapter -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
@@ -19,38 +19,30 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             background-color: #f4f4f9;
         }
-        .chart-container {
+        .controls, .chart-container {
             width: 100%;
             max-width: 800px;
-            margin: 20px 0;
+            margin: 20px;
         }
         .scrollable-chart {
             width: 100%;
-            overflow-x: auto; /* Enable horizontal scrolling */
-            margin: 20px 0;
-            white-space: nowrap; /* Prevent child elements from wrapping */
+            overflow-x: auto;
+            margin-top: 20px;
         }
         .scrollable-chart canvas {
-            min-width: 1000px; /* Increase width to enable scrolling */
+            min-width: 1000px;
         }
         h2 {
             text-align: center;
-        }
-        .controls {
-            margin: 10px 0;
-        }
-        .controls label {
-            margin-right: 10px;
         }
     </style>
 </head>
 <body>
     <h1>データ分析 - 折れ線グラフ表示</h1>
-    
-    <!-- 1日目の時間範囲の設定 -->
+
+    <!-- Date Range Inputs -->
     <div class="controls">
         <h2>1日目の時間範囲</h2>
         <label>開始時刻:
@@ -60,8 +52,6 @@
             <input type="datetime-local" id="day1EndTime" />
         </label>
     </div>
-
-    <!-- 2日目の時間範囲の設定 -->
     <div class="controls">
         <h2>2日目の時間範囲</h2>
         <label>開始時刻:
@@ -73,101 +63,119 @@
         <button onclick="fetchDataAndDrawCharts()">グラフを更新</button>
     </div>
 
-    <!-- Line Charts for Day 1 -->
-    <h2>1日目のデータ</h2>
+    <!-- Line Charts -->
     <div class="scrollable-chart">
+        <h2>1日目のデータ</h2>
         <canvas id="day1LineChart"></canvas>
     </div>
-
-    <!-- Line Charts for Day 2 -->
-    <h2>2日目のデータ</h2>
     <div class="scrollable-chart">
+        <h2>2日目のデータ</h2>
         <canvas id="day2LineChart"></canvas>
     </div>
 
     <script>
-    // Firebase の初期設定
-    const firebaseConfig = {
-        apiKey: "AIzaSyDfmjWjPl786cVBXzqlsiZsS4MUFbwrNNM",
-        authDomain: "school-festival-e4c8d.firebaseapp.com",
-        databaseURL: "https://school-festival-e4c8d-default-rtdb.firebaseio.com",
-        projectId: "school-festival-e4c8d",
-        storageBucket: "school-festival-e4c8d.appspot.com",
-        messagingSenderId: "658868728855",
-        appId: "1:658868728855:web:8d7497c6838f5a42d21852"
-    };
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "API_KEY_HERE",
+            authDomain: "school-festival-e4c8d.firebaseapp.com",
+            databaseURL: "https://school-festival-e4c8d-default-rtdb.firebaseio.com",
+            projectId: "school-festival-e4c8d",
+            storageBucket: "school-festival-e4c8d.appspot.com",
+            messagingSenderId: "658868728855",
+            appId: "1:658868728855:web:8d7497c6838f5a42d21852"
+        };
 
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
-    // グラフインスタンスの保持用変数
-    let day1LineChart, day2LineChart;
+        let day1LineChart, day2LineChart;
 
-    // データを取得してグラフを描画する
-    function fetchDataAndDrawCharts() {
-        const logsRef = database.ref('logs');
-        const day1StartTime = new Date(document.getElementById('day1StartTime').value);
-        const day1EndTime = new Date(document.getElementById('day1EndTime').value);
-        const day2StartTime = new Date(document.getElementById('day2StartTime').value);
-        const day2EndTime = new Date(document.getElementById('day2EndTime').value);
-
-        logsRef.once('value').then(snapshot => {
-            const logs = snapshot.val();
-            processLogUpdates(logs, day1StartTime, day1EndTime, day2StartTime, day2EndTime);
-        });
-    }
-
-    // リアルタイムデータのリスナーを設定
-    function setupRealtimeListeners() {
-        const logsRef = database.ref('logs');
-
-        logsRef.on('value', snapshot => {
-            const logs = snapshot.val();
+        // Fetch data and draw charts
+        function fetchDataAndDrawCharts() {
             const day1StartTime = new Date(document.getElementById('day1StartTime').value);
             const day1EndTime = new Date(document.getElementById('day1EndTime').value);
             const day2StartTime = new Date(document.getElementById('day2StartTime').value);
             const day2EndTime = new Date(document.getElementById('day2EndTime').value);
-            processLogUpdates(logs, day1StartTime, day1EndTime, day2StartTime, day2EndTime);
-        });
-    }
 
-    // ログデータを処理してグラフを更新
-    function processLogUpdates(logs, day1StartTime, day1EndTime, day2StartTime, day2EndTime) {
-        const day1Logs = [];
-        const day2Logs = [];
+            const logsRef = database.ref('logs');
+            logsRef.once('value').then(snapshot => {
+                const logs = snapshot.val();
+                const day1Logs = filterLogsByDate(logs, 'day1', day1StartTime, day1EndTime);
+                const day2Logs = filterLogsByDate(logs, 'day2', day2StartTime, day2EndTime);
+                drawLineCharts(day1Logs, day2Logs);
+            });
+        }
 
-        Object.values(logs).forEach(log => {
-            const logTime = new Date(log.timestamp);
-            if (log.day === 'day1' && logTime >= day1StartTime && logTime <= day1EndTime) {
-                day1Logs.push(log);
-            }
-            if (log.day === 'day2' && logTime >= day2StartTime && logTime <= day2EndTime) {
-                day2Logs.push(log);
-            }
-        });
+        // Filter logs by date
+        function filterLogsByDate(logs, day, startTime, endTime) {
+            const filteredLogs = [];
 
-        drawLineCharts(day1Logs, day2Logs);
-    }
+            Object.values(logs).forEach(log => {
+                const logTime = new Date(log.timestamp);
+                if (log.day === day && logTime >= startTime && logTime <= endTime) {
+                    filteredLogs.push(log);
+                }
+            });
 
-    // 折れ線グラフを描画する
-    function drawLineCharts(day1Logs = [], day2Logs = []) {
-        const day1LineChartCtx = document.getElementById('day1LineChart').getContext('2d');
-        const day2LineChartCtx = document.getElementById('day2LineChart').getContext('2d');
+            return filteredLogs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        }
 
-        if (day1LineChart) day1LineChart.destroy();
-        if (day2LineChart) day2LineChart.destroy();
+        // Draw line charts
+        function drawLineCharts(day1Logs, day2Logs) {
+            const day1Data = processLogs(day1Logs);
+            const day2Data = processLogs(day2Logs);
 
-        const day1Data = processLogs(day1Logs);
-        const day2Data = processLogs(day2Logs);
+            const day1LineChartCtx = document.getElementById('day1LineChart').getContext('2d');
+            const day2LineChartCtx = document.getElementById('day2LineChart').getContext('2d');
 
-        // 1日目の折れ線グラフ
-        day1LineChart = new Chart(day1LineChartCtx, {
-            type: 'line',
-            data: {
-                labels: day1Data.timestamps,
-                datasets: day1Data.datasets
-            },
-            options: {
+            if (day1LineChart) day1LineChart.destroy();
+            if (day2LineChart) day2LineChart.destroy();
+
+            day1LineChart = new Chart(day1LineChartCtx, {
+                type: 'line',
+                data: {
+                    labels: day1Data.timestamps,
+                    datasets: day1Data.datasets
+                },
+                options: getChartOptions('1日目の販売数の推移')
+            });
+
+            day2LineChart = new Chart(day2LineChartCtx, {
+                type: 'line',
+                data: {
+                    labels: day2Data.timestamps,
+                    datasets: day2Data.datasets
+                },
+                options: getChartOptions('2日目の販売数の推移')
+            });
+        }
+
+        // Prepare data for line charts
+        function processLogs(logs) {
+            const timestamps = [];
+            const datasets = {
+                plain: { label: 'プレーン', data: [], borderColor: '#007BFF', fill: false },
+                choco: { label: 'チョコ', data: [], borderColor: '#8B4513', fill: false },
+                strawberry: { label: 'いちご', data: [], borderColor: '#FF6347', fill: false },
+                matcha: { label: '抹茶', data: [], borderColor: '#3CB371', fill: false },
+                jdk: { label: 'JDK', data: [], borderColor: '#FFD700', fill: false }
+            };
+
+            logs.forEach(log => {
+                const timestamp = new Date(log.timestamp);
+                timestamps.push(timestamp);
+                datasets[log.type].data.push(log.newCount);
+            });
+
+            return {
+                timestamps: timestamps,
+                datasets: Object.values(datasets)
+            };
+        }
+
+        // Get chart options
+        function getChartOptions(title) {
+            return {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
@@ -179,11 +187,13 @@
                                 hour: 'MMM D, HH:mm'
                             }
                         },
-                        min: day1Data.timestamps[0] || null,
-                        max: day1Data.timestamps[day1Data.timestamps.length - 1] || null,
+                        title: {
+                            display: true,
+                            text: '時間'
+                        },
                         ticks: {
                             maxRotation: 0,
-                            autoSkip: true,
+                            autoSkip: true
                         }
                     },
                     y: {
@@ -200,120 +210,14 @@
                     },
                     title: {
                         display: true,
-                        text: '1日目の販売数の推移'
+                        text: title
                     }
                 }
-            }
-        });
+            };
+        }
 
-        // 2日目の折れ線グラフ
-        day2LineChart = new Chart(day2LineChartCtx, {
-            type: 'line',
-            data: {
-                labels: day2Data.timestamps,
-                datasets: day2Data.datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'hour',
-                            displayFormats: {
-                                hour: 'MMM D, HH:mm'
-                            }
-                        },
-                        min: day2Data.timestamps[0] || null,
-                        max: day2Data.timestamps[day2Data.timestamps.length - 1] || null,
-                        ticks: {
-                            maxRotation: 0,
-                            autoSkip: true,
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'カウント数'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    title: {
-                        display: true,
-                        text: '2日目の販売数の推移'
-                    }
-                }
-            }
-        });
-    }
-
-    // ログを処理して折れ線グラフのデータ形式に変換する
-    function processLogs(logs) {
-        const timestamps = [];
-        const datasets = {
-            plain: [],
-            choco: [],
-            strawberry: [],
-            matcha: [],
-            jdk: []
-        };
-
-        logs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // 時間順にソート
-
-        logs.forEach(log => {
-            const timestamp = new Date(log.timestamp);
-            timestamps.push(timestamp);
-
-            // 各ログのカウント数の値をそのまま使用
-            datasets[log.type].push(log.newCount);
-        });
-
-        return {
-            timestamps: timestamps,
-            datasets: [
-                {
-                    label: 'プレーン',
-                    data: datasets.plain,
-                    borderColor: '#007BFF',
-                    fill: false
-                },
-                {
-                    label: 'チョコ',
-                    data: datasets.choco,
-                    borderColor: '#8B4513',
-                    fill: false
-                },
-                {
-                    label: 'いちご',
-                    data: datasets.strawberry,
-                    borderColor: '#FF6347',
-                    fill: false
-                },
-                {
-                    label: '抹茶',
-                    data: datasets.matcha,
-                    borderColor: '#3CB371',
-                    fill: false
-                },
-                {
-                    label: 'JDK',
-                    data: datasets.jdk,
-                    borderColor: '#FFD700',
-                    fill: false
-                }
-            ]
-        };
-    }
-
-    // 初期化
-    fetchDataAndDrawCharts();
-    setupRealtimeListeners();
+        // Initial setup
+        fetchDataAndDrawCharts();
     </script>
 </body>
 </html>
