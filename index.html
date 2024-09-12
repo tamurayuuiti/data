@@ -7,11 +7,10 @@
     <!-- Include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <!-- Include Chart.js, Luxon Adapter, and Data Labels Plugin -->
+    <!-- Include Chart.js and Luxon Adapter -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/luxon"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,11 +26,6 @@
             width: 100%;
             max-width: 800px;
             margin: 20px 0;
-        }
-        .small-chart {
-            width: 300px;
-            height: 300px;
-            margin: 20px auto;
         }
         .scrollable-chart {
             width: 100%;
@@ -54,7 +48,7 @@
     </style>
 </head>
 <body>
-    <h1>データ分析 - グラフ表示</h1>
+    <h1>データ分析 - 折れ線グラフ表示</h1>
     
     <!-- 1日目の時間範囲の設定 -->
     <div class="controls">
@@ -79,20 +73,14 @@
         <button onclick="fetchDataAndDrawCharts()">グラフを更新</button>
     </div>
 
-    <!-- Charts for Day 1 -->
+    <!-- Line Charts for Day 1 -->
     <h2>1日目のデータ</h2>
-    <div class="chart-container small-chart">
-        <canvas id="day1PieChart"></canvas>
-    </div>
     <div class="scrollable-chart">
         <canvas id="day1LineChart"></canvas>
     </div>
 
-    <!-- Charts for Day 2 -->
+    <!-- Line Charts for Day 2 -->
     <h2>2日目のデータ</h2>
-    <div class="chart-container small-chart">
-        <canvas id="day2PieChart"></canvas>
-    </div>
     <div class="scrollable-chart">
         <canvas id="day2LineChart"></canvas>
     </div>
@@ -113,7 +101,7 @@
     const database = firebase.database();
 
     // グラフインスタンスの保持用変数
-    let day1PieChart, day2PieChart, day1LineChart, day2LineChart;
+    let day1LineChart, day2LineChart;
 
     // データを取得してグラフを描画する
     function fetchDataAndDrawCharts() {
@@ -124,40 +112,28 @@
         const day2StartTime = new Date(document.getElementById('day2StartTime').value);
         const day2EndTime = new Date(document.getElementById('day2EndTime').value);
 
-        countersRef.once('value').then(snapshot => {
-            const counters = snapshot.val();
-            drawPieCharts(counters.day1, counters.day2);
-        });
-
         logsRef.once('value').then(snapshot => {
             const logs = snapshot.val();
-            processLogUpdates(logs);
+            processLogUpdates(logs, day1StartTime, day1EndTime, day2StartTime, day2EndTime);
         });
     }
 
     // リアルタイムデータのリスナーを設定
     function setupRealtimeListeners() {
-        const countersRef = database.ref('counters');
         const logsRef = database.ref('logs');
-
-        countersRef.on('value', snapshot => {
-            const counters = snapshot.val();
-            drawPieCharts(counters.day1, counters.day2);
-        });
 
         logsRef.on('value', snapshot => {
             const logs = snapshot.val();
-            processLogUpdates(logs);
+            const day1StartTime = new Date(document.getElementById('day1StartTime').value);
+            const day1EndTime = new Date(document.getElementById('day1EndTime').value);
+            const day2StartTime = new Date(document.getElementById('day2StartTime').value);
+            const day2EndTime = new Date(document.getElementById('day2EndTime').value);
+            processLogUpdates(logs, day1StartTime, day1EndTime, day2StartTime, day2EndTime);
         });
     }
 
     // ログデータを処理してグラフを更新
-    function processLogUpdates(logs) {
-        const day1StartTime = new Date(document.getElementById('day1StartTime').value);
-        const day1EndTime = new Date(document.getElementById('day1EndTime').value);
-        const day2StartTime = new Date(document.getElementById('day2StartTime').value);
-        const day2EndTime = new Date(document.getElementById('day2EndTime').value);
-
+    function processLogUpdates(logs, day1StartTime, day1EndTime, day2StartTime, day2EndTime) {
         const day1Logs = [];
         const day2Logs = [];
 
@@ -172,101 +148,6 @@
         });
 
         drawLineCharts(day1Logs, day2Logs);
-    }
-
-    // 円グラフを描画する
-    function drawPieCharts(day1Data = {}, day2Data = {}) {
-        const day1PieChartCtx = document.getElementById('day1PieChart').getContext('2d');
-        const day2PieChartCtx = document.getElementById('day2PieChart').getContext('2d');
-
-        // 既存の円グラフを破棄
-        if (day1PieChart) day1PieChart.destroy();
-        if (day2PieChart) day2PieChart.destroy();
-
-        day1Data = day1Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
-        day2Data = day2Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
-
-        // 1日目の円グラフ
-        day1PieChart = new Chart(day1PieChartCtx, {
-            type: 'pie',
-            data: {
-                labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
-                datasets: [{
-                    data: [
-                        day1Data.plain || 0,
-                        day1Data.choco || 0,
-                        day1Data.strawberry || 0,
-                        day1Data.matcha || 0,
-                        day1Data.jdk || 0
-                    ],
-                    backgroundColor: ['#007BFF', '#8B4513', '#FF6347', '#3CB371', '#FFD700']
-                }]
-            },
-            options: {
-                responsive: true,
-                animation: {
-                    animateRotate: true,
-                    animateScale: true
-                },
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    title: {
-                        display: true,
-                        text: '1日目の販売数分布'
-                    },
-                    datalabels: {
-                        color: '#fff',
-                        formatter: (value, context) => {
-                            return value > 0 ? value : '';
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-
-        // 2日目の円グラフ
-        day2PieChart = new Chart(day2PieChartCtx, {
-            type: 'pie',
-            data: {
-                labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
-                datasets: [{
-                    data: [
-                        day2Data.plain || 0,
-                        day2Data.choco || 0,
-                        day2Data.strawberry || 0,
-                        day2Data.matcha || 0,
-                        day2Data.jdk || 0
-                    ],
-                    backgroundColor: ['#007BFF', '#8B4513', '#FF6347', '#3CB371', '#FFD700']
-                }]
-            },
-            options: {
-                responsive: true,
-                animation: {
-                    animateRotate: true,
-                    animateScale: true
-                },
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    },
-                    title: {
-                        display: true,
-                        text: '2日目の販売数分布'
-                    },
-                    datalabels: {
-                        color: '#fff',
-                        formatter: (value, context) => {
-                            return value > 0 ? value : '';
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
     }
 
     // 折れ線グラフを描画する
@@ -372,10 +253,16 @@
             jdk: []
         };
 
+        // 各カウンターの累積値を計算
+        const counters = { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
+
+        logs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp)); // 時間順にソート
+
         logs.forEach(log => {
             const timestamp = new Date(log.timestamp);
             timestamps.push(timestamp);
-            datasets[log.type].push(log.newCount);
+            counters[log.type] += log.change; // 増加または減少を反映
+            datasets[log.type].push(counters[log.type]);
         });
 
         return {
