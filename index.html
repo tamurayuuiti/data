@@ -19,7 +19,7 @@
             width: 100%;
             overflow-x: auto; /* 横スクロールを可能にする */
             white-space: nowrap; /* 要素が折り返されないようにする */
-            touch-action: pan-x pan-y; /* タッチスクロールを有効にする */
+            touch-action: none; /* タッチ操作でのズーム・パンを有効にする */
         }
         .chart-container canvas {
             min-width: 1200px; /* 十分な最小幅を設定して横スクロールを発生させる */
@@ -199,42 +199,45 @@
                     },
                     plugins: {
                         zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'x', // x軸方向のみパン
-                                rangeMin: { x: minDate.getTime() }, // パンの最小限度
-                                rangeMax: { x: maxDate.getTime() }  // パンの最大限度
+                            limits: {
+                                x: { min: minDate.getTime(), max: maxDate.getTime() } // ズームの制限を設定
                             },
-                            zoom: {
-                                wheel: {
-                                    enabled: true,
-                                    speed: 0.05 // ズームの速度を調整
-                                },
-                                pinch: {
-                                    enabled: true,
-                                    speed: 0.05 // ピンチズームの速度を調整
-                                },
-                                mode: 'x' // x軸方向のみズーム
-                            }
+                            pan: {                            enabled: true,
+                            mode: 'x', // x軸方向のみパン
+                            rangeMin: { x: minDate.getTime() }, // パンの最小限度
+                            rangeMax: { x: maxDate.getTime() }  // パンの最大限度
+                        },
+                        zoom: {
+                            wheel: {
+                                enabled: true,
+                                speed: 0.05, // ズームの速度を調整
+                                rangeMin: { x: minDate.getTime() } // デフォルトよりズームアウトしない
+                            },
+                            pinch: {
+                                enabled: true,
+                                speed: 0.05, // ピンチズームの速度を調整
+                                rangeMin: { x: minDate.getTime() } // デフォルトよりズームアウトしない
+                            },
+                            mode: 'x' // x軸方向のみズーム
                         }
                     }
                 }
-            });
-        }
+            }
+        });
+    }
 
-        // グラフを更新
-        function updateChart(chart, chartData, zoomState) {
-            chart.data.labels = chartData.labels;
-            chart.data.datasets.forEach((dataset, index) => {
-                dataset.data = chartData.dataByType[Object.keys(chartData.dataByType)[index]];
-            });
+    // グラフを更新
+    function updateChart(chart, chartData, zoomState) {
+        chart.data.labels = chartData.labels;
+        chart.data.datasets.forEach((dataset, index) => {
+            dataset.data = chartData.dataByType[Object.keys(chartData.dataByType)[index]];
+        });
 
-            // ズームとパンの状態を保持
-            chart.options.plugins.zoom.limits.x.min = zoomState.x.min;
-            chart.options.plugins.zoom.limits.x.max = zoomState.x.max;
+        // ズームとパンの状態を保持
+        chart.options.plugins.zoom.limits.x.min = zoomState.x.min;
+        chart.options.plugins.zoom.limits.x.max = zoomState.x.max;
 
-            chart.update();
-        }
-    </script>
-</body>
-</html>
+        chart.update();
+    }
+</script>
+
