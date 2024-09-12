@@ -103,6 +103,9 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
+    // グラフインスタンスの保持用変数
+    let day1PieChart, day2PieChart, day1LineChart, day2LineChart;
+
     // データを取得してグラフを描画する
     function fetchDataAndDrawCharts() {
         const countersRef = database.ref('counters');
@@ -147,12 +150,16 @@
         const day1PieChartCtx = document.getElementById('day1PieChart').getContext('2d');
         const day2PieChartCtx = document.getElementById('day2PieChart').getContext('2d');
 
+        // 既存の円グラフを破棄
+        if (day1PieChart) day1PieChart.destroy();
+        if (day2PieChart) day2PieChart.destroy();
+
         // データがない場合の初期化
         day1Data = day1Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
         day2Data = day2Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
 
         // 1日目の円グラフ
-        new Chart(day1PieChartCtx, {
+        day1PieChart = new Chart(day1PieChartCtx, {
             type: 'pie',
             data: {
                 labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
@@ -182,7 +189,7 @@
         });
 
         // 2日目の円グラフ
-        new Chart(day2PieChartCtx, {
+        day2PieChart = new Chart(day2PieChartCtx, {
             type: 'pie',
             data: {
                 labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
@@ -217,11 +224,15 @@
         const day1LineChartCtx = document.getElementById('day1LineChart').getContext('2d');
         const day2LineChartCtx = document.getElementById('day2LineChart').getContext('2d');
 
+        // 既存の折れ線グラフを破棄
+        if (day1LineChart) day1LineChart.destroy();
+        if (day2LineChart) day2LineChart.destroy();
+
         const day1Data = processLogs(day1Logs);
         const day2Data = processLogs(day2Logs);
 
         // 1日目の折れ線グラフ
-        new Chart(day1LineChartCtx, {
+        day1LineChart = new Chart(day1LineChartCtx, {
             type: 'line',
             data: {
                 labels: day1Data.timestamps,
@@ -232,7 +243,7 @@
                 maintainAspectRatio: false,
                 scales: {
                     x: {
-                        type: 'time', // 時間ベースのスケール
+                        type: 'time',
                         time: {
                             unit: 'hour',
                             displayFormats: {
@@ -260,7 +271,7 @@
         });
 
         // 2日目の折れ線グラフ
-        new Chart(day2LineChartCtx, {
+        day2LineChart = new Chart(day2LineChartCtx, {
             type: 'line',
             data: {
                 labels: day2Data.timestamps,
