@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js 日付アダプタの読み込み -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <!-- Chart.js Zoomプラグインの読み込み -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
     <!-- Firebase App (the core Firebase SDK) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <!-- Firebase Realtime Database -->
@@ -18,14 +20,14 @@
             overflow-x: auto; /* 横スクロールを可能にする */
         }
         .chart-container canvas {
-            min-width: 800px; /* 最低幅を指定して横スクロールできるようにする */
+            min-width: 600px; /* 最小幅を小さくして横スクロールを発生させやすくする */
         }
     </style>
 </head>
 <body>
     <h1>カウント数の推移グラフ</h1>
 
-    <h2>1日目 (2024年9月12日 00:00 - 23:59)</h2>
+    <h2>1日目 (2024年9月13日 00:00 - 23:59)</h2>
     <div class="chart-container">
         <canvas id="day1Chart" width="800" height="200"></canvas>
     </div>
@@ -53,8 +55,8 @@
         const logRef = database.ref('logs');
 
         // 期間設定
-        const day1Start = new Date('2024-09-12T00:00:00');
-        const day1End = new Date('2024-09-12T23:59:59');
+        const day1Start = new Date('2024-09-13T00:00:00'); // 1日目の期間を13日に変更
+        const day1End = new Date('2024-09-13T23:59:59');
         const day2Start = new Date('2024-09-14T09:00:00');
         const day2End = new Date('2024-09-14T16:00:00');
 
@@ -173,6 +175,19 @@
                         },
                         y: {
                             beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        zoom: {
+                            zoom: {
+                                wheel: {
+                                    enabled: true // ズーム機能をマウスホイールで有効化
+                                },
+                                pinch: {
+                                    enabled: true // タッチスクリーンでのピンチズームを有効化
+                                },
+                                mode: 'x' // x軸方向のみズーム
+                            }
                         }
                     }
                 }
