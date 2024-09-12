@@ -173,7 +173,8 @@
                                 unit: 'minute'
                             },
                             min: minDate, // 最小表示日時
-                            max: maxDate  // 最大表示日時
+                            max: maxDate,  // 最大表示日時
+                            bounds: 'ticks' // 軸の範囲をデータの範囲に制限
                         },
                         y: {
                             beginAtZero: true
@@ -181,6 +182,16 @@
                     },
                     plugins: {
                         zoom: {
+                            limits: {
+                                x: {min: minDate, max: maxDate}, // ズームとパンの制限を期間内に設定
+                                y: {min: 'original', max: 'original'} // Y軸は元の範囲に制限
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                                rangeMin: {x: minDate}, // 最小パン位置
+                                rangeMax: {x: maxDate}  // 最大パン位置
+                            },
                             zoom: {
                                 wheel: {
                                     enabled: true,
@@ -190,7 +201,10 @@
                                     enabled: true,
                                     speed: 0.1 // ピンチズームの速度を遅くする
                                 },
-                                mode: 'x' // x軸方向のみズーム
+                                mode: 'x',
+                                limits: {
+                                    x: {minRange: (maxDate - minDate) / (24 * 60 * 60 * 1000)} // ズームアウトの最小限を1日分に制限
+                                }
                             }
                         }
                     }
