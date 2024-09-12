@@ -3,106 +3,270 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>カウンターログ表示</title>
-    <!-- Firebase App (the core Firebase SDK) -->
+    <title>グラフ表示サイト</title>
+    <!-- Include Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <!-- Firebase Realtime Database -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <!-- Include Luxon and Chart.js Adapter from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/luxon@3.3.0/build/global/luxon.min.js"></script>
-    <!-- Include Chart.js from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.0/dist/chartjs-adapter-luxon.umd.min.js"></script>
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f4f4f9;
+        }
+        .chart-container {
+            width: 80%;
+            max-width: 800px;
+            margin: 20px 0;
+        }
+        h2 {
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-    <h1>カウンターログの推移</h1>
-    <canvas id="counter-line-chart" width="800" height="400"></canvas>
+    <h1>データ分析 - グラフ表示</h1>
+    
+    <!-- Charts for Day 1 -->
+    <h2>1日目のデータ</h2>
+    <div class="chart-container">
+        <canvas id="day1PieChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="day1LineChart"></canvas>
+    </div>
+
+    <!-- Charts for Day 2 -->
+    <h2>2日目のデータ</h2>
+    <div class="chart-container">
+        <canvas id="day2PieChart"></canvas>
+    </div>
+    <div class="chart-container">
+        <canvas id="day2LineChart"></canvas>
+    </div>
 
     <script>
-        // Firebaseの設定
-        const firebaseConfig = {
-            apiKey: "AIzaSyDfmjWjPl786cVBXzqlsiZsS4MUFbwrNNM",
-            authDomain: "school-festival-e4c8d.firebaseapp.com",
-            databaseURL: "https://school-festival-e4c8d-default-rtdb.firebaseio.com",
-            projectId: "school-festival-e4c8d",
-            storageBucket: "school-festival-e4c8d.appspot.com",
-            messagingSenderId: "658868728855",
-            appId: "1:658868728855:web:8d7497c6838f5a42d21852"
-        };
+    // Firebase の初期設定
+    const firebaseConfig = {
+        apiKey: "AIzaSyDfmjWjPl786cVBXzqlsiZsS4MUFbwrNNM",
+        authDomain: "school-festival-e4c8d.firebaseapp.com",
+        databaseURL: "https://school-festival-e4c8d-default-rtdb.firebaseio.com",
+        projectId: "school-festival-e4c8d",
+        storageBucket: "school-festival-e4c8d.appspot.com",
+        messagingSenderId: "658868728855",
+        appId: "1:658868728855:web:8d7497c6838f5a42d21852"
+    };
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // データを取得してグラフを描画する
+    function fetchDataAndDrawCharts() {
+        const countersRef = database.ref('counters');
         const logsRef = database.ref('logs');
 
-        // ログデータの取得
-        logsRef.once('value', snapshot => {
+        countersRef.once('value').then(snapshot => {
+            const counters = snapshot.val();
+            drawPieCharts(counters.day1, counters.day2);
+        });
+
+        logsRef.once('value').then(snapshot => {
             const logs = snapshot.val();
-            if (!logs) return;
+            const day1Logs = [];
+            const day2Logs = [];
 
-            // ログデータを整形してグラフ用のデータを作成
-            const chartData = {
-                labels: [], // 時間ラベル
-                datasets: [
-                    { label: 'プレーン', data: [], borderColor: '#007BFF', fill: false },
-                    { label: 'チョコ', data: [], borderColor: '#8B4513', fill: false },
-                    { label: 'いちご', data: [], borderColor: '#FF6347', fill: false },
-                    { label: '抹茶', data: [], borderColor: '#3CB371', fill: false },
-                    { label: 'JDK', data: [], borderColor: '#FFD700', fill: false }
-                ]
-            };
-
-            // 各ログエントリを時間順にソートし、グラフデータを構成
-            const sortedLogs = Object.entries(logs).sort((a, b) => new Date(a[1].timestamp) - new Date(b[1].timestamp));
-            sortedLogs.forEach(([key, log]) => {
-                const date = new Date(log.timestamp); // 日付オブジェクトを生成
-                if (!chartData.labels.includes(date)) {
-                    chartData.labels.push(date); // ラベルに日付を追加
-                }
-
-                const targetDataset = chartData.datasets.find(dataset => dataset.label === log.type);
-                if (targetDataset) {
-                    targetDataset.data.push({ x: date, y: log.newCount }); // 各カウンターのデータを追加
+            // ログを日ごとに分ける
+            Object.values(logs).forEach(log => {
+                if (log.day === 'day1') {
+                    day1Logs.push(log);
+                } else if (log.day === 'day2') {
+                    day2Logs.push(log);
                 }
             });
 
-            // グラフの描画
-            new Chart(document.getElementById('counter-line-chart'), {
-                type: 'line',
-                data: chartData,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'カウンターの増減推移'
-                        }
+            drawLineCharts(day1Logs, day2Logs);
+        });
+    }
+
+    // 円グラフを描画する
+    function drawPieCharts(day1Data, day2Data) {
+        const day1PieChartCtx = document.getElementById('day1PieChart').getContext('2d');
+        const day2PieChartCtx = document.getElementById('day2PieChart').getContext('2d');
+
+        // 1日目の円グラフ
+        new Chart(day1PieChartCtx, {
+            type: 'pie',
+            data: {
+                labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
+                datasets: [{
+                    data: [
+                        day1Data.plain,
+                        day1Data.choco,
+                        day1Data.strawberry,
+                        day1Data.matcha,
+                        day1Data.jdk
+                    ],
+                    backgroundColor: ['#007BFF', '#8B4513', '#FF6347', '#3CB371', '#FFD700']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
                     },
-                    scales: {
-                        x: {
-                            type: 'time', // X軸を時間軸に設定
-                            time: {
-                                unit: 'minute', // 時間単位を指定
-                                tooltipFormat: 'yyyy-MM-dd HH:mm',
-                                displayFormats: {
-                                    minute: 'yyyy-MM-dd HH:mm'
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: '時間'
-                            }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '個数'
-                            }
-                        }
+                    title: {
+                        display: true,
+                        text: '1日目の販売数分布'
                     }
                 }
-            });
+            }
         });
+
+        // 2日目の円グラフ
+        new Chart(day2PieChartCtx, {
+            type: 'pie',
+            data: {
+                labels: ['プレーン', 'チョコ', 'いちご', '抹茶', 'JDK'],
+                datasets: [{
+                    data: [
+                        day2Data.plain,
+                        day2Data.choco,
+                        day2Data.strawberry,
+                        day2Data.matcha,
+                        day2Data.jdk
+                    ],
+                    backgroundColor: ['#007BFF', '#8B4513', '#FF6347', '#3CB371', '#FFD700']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: '2日目の販売数分布'
+                    }
+                }
+            }
+        });
+    }
+
+    // 折れ線グラフを描画する
+    function drawLineCharts(day1Logs, day2Logs) {
+        const day1LineChartCtx = document.getElementById('day1LineChart').getContext('2d');
+        const day2LineChartCtx = document.getElementById('day2LineChart').getContext('2d');
+
+        const day1Data = processLogs(day1Logs);
+        const day2Data = processLogs(day2Logs);
+
+        // 1日目の折れ線グラフ
+        new Chart(day1LineChartCtx, {
+            type: 'line',
+            data: {
+                labels: day1Data.timestamps,
+                datasets: day1Data.datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: '1日目の販売数の推移'
+                    }
+                }
+            }
+        });
+
+        // 2日目の折れ線グラフ
+        new Chart(day2LineChartCtx, {
+            type: 'line',
+            data: {
+                labels: day2Data.timestamps,
+                datasets: day2Data.datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top'
+                    },
+                    title: {
+                        display: true,
+                        text: '2日目の販売数の推移'
+                    }
+                }
+            }
+        });
+    }
+
+    // ログを処理して折れ線グラフのデータ形式に変換する
+    function processLogs(logs) {
+        const timestamps = [];
+        const datasets = {
+            plain: [],
+            choco: [],
+            strawberry: [],
+            matcha: [],
+            jdk: []
+        };
+
+        logs.forEach(log => {
+            if (!timestamps.includes(log.timestamp)) {
+                timestamps.push(log.timestamp);
+            }
+            datasets[log.type].push(log.newCount);
+        });
+
+        return {
+            timestamps: timestamps,
+            datasets: [
+                {
+                    label: 'プレーン',
+                    data: datasets.plain,
+                    borderColor: '#007BFF',
+                    fill: false
+                },
+                {
+                    label: 'チョコ',
+                    data: datasets.choco,
+                    borderColor: '#8B4513',
+                    fill: false
+                },
+                {
+                    label: 'いちご',
+                    data: datasets.strawberry,
+                    borderColor: '#FF6347',
+                    fill: false
+                },
+                {
+                    label: '抹茶',
+                    data: datasets.matcha,
+                    borderColor: '#3CB371',
+                    fill: false
+                },
+                {
+                    label: 'JDK',
+                    data: datasets.jdk,
+                    borderColor: '#FFD700',
+                    fill: false
+                }
+            ]
+        };
+    }
+
+    fetchDataAndDrawCharts();
     </script>
 </body>
 </html>
