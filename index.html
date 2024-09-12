@@ -5,28 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>カウントログの折れ線グラフ</title>
     <style>
-        /* 必要なCSSの設定 */
+        /* CSSの設定 */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f4f4f4;
+            background-color: #f0f0f0;
         }
         .chart-container {
             width: 90%;
             height: 400px;
             margin: 20px auto;
-            overflow-x: scroll;
+            overflow-x: auto;
             border: 1px solid #ddd;
             padding: 10px;
             background-color: #fff;
         }
-        canvas {
-            width: 1000px; /* 初期のキャンバスサイズ */
-        }
         .controls {
             text-align: center;
             margin-bottom: 20px;
+        }
+        .controls label {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+        .controls input {
+            margin-right: 10px;
         }
     </style>
     <!-- FirebaseとChart.jsのインクルード -->
@@ -36,9 +40,9 @@
 </head>
 <body>
     <div class="controls">
-        <label for="start-date">開始日: </label>
+        <label for="start-date">開始日時:</label>
         <input type="datetime-local" id="start-date" value="2024-09-01T00:00">
-        <label for="end-date">終了日: </label>
+        <label for="end-date">終了日時:</label>
         <input type="datetime-local" id="end-date" value="2024-09-02T23:59">
         <button onclick="updateGraph()">グラフを更新</button>
     </div>
@@ -71,24 +75,35 @@
             const startDate = new Date(document.getElementById('start-date').value);
             const endDate = new Date(document.getElementById('end-date').value);
 
+            // タイムスタンプのISO文字列で範囲指定
+            const startTimestamp = startDate.toISOString();
+            const endTimestamp = endDate.toISOString();
+
+            // ログデータをFirebaseから取得
             const logsRef = database.ref('logs');
-            logsRef.orderByChild('timestamp').startAt(startDate.toISOString()).endAt(endDate.toISOString()).once('value', snapshot => {
+            logsRef.orderByChild('timestamp').startAt(startTimestamp).endAt(endTimestamp).once('value', snapshot => {
                 const logs = snapshot.val();
-                const day1Data = [], day2Data = [];
+                const day1Data = [];
+                const day2Data = [];
                 if (logs) {
+                    // 取得したログデータを基にデータを整形
                     Object.keys(logs).forEach(key => {
                         const log = logs[key];
                         const logTime = new Date(log.timestamp);
+                        const dataPoint = { x: logTime, y: log.newCount };
+
                         if (log.day === 'day1') {
-                            day1Data.push({ x: logTime, y: log.newCount });
+                            day1Data.push(dataPoint);
                         } else if (log.day === 'day2') {
-                            day2Data.push({ x: logTime, y: log.newCount });
+                            day2Data.push(dataPoint);
                         }
                     });
 
                     // グラフを描画
                     drawChart('chart1', day1Data, '1日目のカウントログ');
                     drawChart('chart2', day2Data, '2日目のカウントログ');
+                } else {
+                    alert("指定した期間のデータが見つかりませんでした。");
                 }
             });
         }
@@ -98,6 +113,7 @@
             if (window[canvasId]) {
                 window[canvasId].destroy(); // 前のグラフを破棄
             }
+
             window[canvasId] = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -106,7 +122,8 @@
                         data: data,
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 2,
-                        fill: false
+                        fill: false,
+                        tension: 0.1
                     }]
                 },
                 options: {
@@ -118,11 +135,24 @@
                             }
                         },
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'カウント数'
+                            }
                         }
                     },
                     responsive: true,
-                    maintainAspectRatio: false
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
                 }
             });
         }
