@@ -23,7 +23,7 @@
             background-color: #f4f4f9;
         }
         .chart-container {
-            width: 80%;
+            width: 100%;
             max-width: 800px;
             margin: 20px 0;
         }
@@ -114,43 +114,43 @@
     // グラフインスタンスの保持用変数
     let day1PieChart, day2PieChart, day1LineChart, day2LineChart;
 
-    // データを取得してグラフを描画する
-    function fetchDataAndDrawCharts() {
+    // リアルタイムデータのリスナーを設定
+    function setupRealtimeListeners() {
         const countersRef = database.ref('counters');
         const logsRef = database.ref('logs');
+
+        countersRef.on('value', snapshot => {
+            const counters = snapshot.val();
+            drawPieCharts(counters.day1, counters.day2);
+        });
+
+        logsRef.on('value', snapshot => {
+            const logs = snapshot.val();
+            processLogUpdates(logs);
+        });
+    }
+
+    // ログデータを処理してグラフを更新
+    function processLogUpdates(logs) {
         const day1StartTime = new Date(document.getElementById('day1StartTime').value);
         const day1EndTime = new Date(document.getElementById('day1EndTime').value);
         const day2StartTime = new Date(document.getElementById('day2StartTime').value);
         const day2EndTime = new Date(document.getElementById('day2EndTime').value);
 
-        countersRef.once('value').then(snapshot => {
-            const counters = snapshot.val();
-            drawPieCharts(counters.day1, counters.day2);
+        const day1Logs = [];
+        const day2Logs = [];
+
+        Object.values(logs).forEach(log => {
+            const logTime = new Date(log.timestamp);
+            if (log.day === 'day1' && logTime >= day1StartTime && logTime <= day1EndTime) {
+                day1Logs.push(log);
+            }
+            if (log.day === 'day2' && logTime >= day2StartTime && logTime <= day2EndTime) {
+                day2Logs.push(log);
+            }
         });
 
-        logsRef.once('value').then(snapshot => {
-            const logs = snapshot.val();
-            const day1Logs = [];
-            const day2Logs = [];
-
-            // 1日目のログを指定された時間範囲内にフィルタリング
-            Object.values(logs).forEach(log => {
-                const logTime = new Date(log.timestamp);
-                if (log.day === 'day1' && logTime >= day1StartTime && logTime <= day1EndTime) {
-                    day1Logs.push(log);
-                }
-            });
-
-            // 2日目のログを指定された時間範囲内にフィルタリング
-            Object.values(logs).forEach(log => {
-                const logTime = new Date(log.timestamp);
-                if (log.day === 'day2' && logTime >= day2StartTime && logTime <= day2EndTime) {
-                    day2Logs.push(log);
-                }
-            });
-
-            drawLineCharts(day1Logs, day2Logs);
-        });
+        drawLineCharts(day1Logs, day2Logs);
     }
 
     // 円グラフを描画する
@@ -162,7 +162,6 @@
         if (day1PieChart) day1PieChart.destroy();
         if (day2PieChart) day2PieChart.destroy();
 
-        // データがない場合の初期化
         day1Data = day1Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
         day2Data = day2Data || { plain: 0, choco: 0, strawberry: 0, matcha: 0, jdk: 0 };
 
@@ -232,7 +231,6 @@
         const day1LineChartCtx = document.getElementById('day1LineChart').getContext('2d');
         const day2LineChartCtx = document.getElementById('day2LineChart').getContext('2d');
 
-        // 既存の折れ線グラフを破棄
         if (day1LineChart) day1LineChart.destroy();
         if (day2LineChart) day2LineChart.destroy();
 
@@ -375,6 +373,7 @@
     }
 
     fetchDataAndDrawCharts();
+    setupRealtimeListeners();
     </script>
 </body>
 </html>
