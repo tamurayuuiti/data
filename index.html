@@ -35,7 +35,7 @@
         <canvas id="day1Chart" width="800" height="200"></canvas>
     </div>
     
-    <h2>2日目 (2024年9月14日 10:00 - 15:30)</h2>
+    <h2 id="day2Header"></h2> <!-- 2日目の見出しを動的に更新 -->
     <div class="chart-container">
         <canvas id="day2Chart" width="800" height="200"></canvas>
     </div>
@@ -60,12 +60,25 @@
         // 期間設定
         const day1Start = new Date('2024-09-13T10:00:00'); // 1日目の期間を13日の10時から15時までに設定
         const day1End = new Date('2024-09-13T15:00:00');
-        const day2Start = new Date('2024-09-14T10:00:00'); // 2日目の期間を14日の10時から15時半までに設定
-        const day2End = new Date('2024-09-14T15:30:00');
+        
+        // 2日目の開始時刻と終了時刻を変更
+        const day2Start = new Date('2024-09-14T09:30:00'); 
+        const day2End = new Date('2024-09-14T15:30:00');  
 
         let day1Chart, day2Chart; // グラフオブジェクトを保持する変数
         let day1ZoomState = { x: { min: day1Start.getTime(), max: day1End.getTime() } }; // 1日目のズーム状態
         let day2ZoomState = { x: { min: day2Start.getTime(), max: day2End.getTime() } }; // 2日目のズーム状態
+
+        // 時間フォーマット関数
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        // 2日目の開始・終了時刻を見出しに反映
+        document.getElementById('day2Header').innerText = 
+            `2日目 (${day2Start.toLocaleDateString()} ${formatTime(day2Start)} - ${formatTime(day2End)})`;
 
         // Firebaseからのログデータをリアルタイムで取得
         logRef.on('value', snapshot => {
